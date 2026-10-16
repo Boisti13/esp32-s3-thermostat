@@ -45,6 +45,7 @@ esphome:
             if (!isnan(panel_cache.outdoor)) id(outdoor_temp).publish_state(panel_cache.outdoor);
             id(main_valve).publish_state(panel_cache.main_valve);
             if (panel_cache.central[0]) id(central_mode).publish_state(panel_cache.central);
+            id(sun_up) = panel_cache.sun_up;   // Auto mode starts in the right mode
         - script.execute: refresh_status
 
 # Each wake is a reboot that lasts under a minute; with the default
@@ -142,4 +143,5 @@ script:
           panel_cache.outdoor = id(outdoor_temp).state;
           panel_cache.main_valve = id(main_valve).has_state() && id(main_valve).state;
           cache_copy(panel_cache.central, sizeof(panel_cache.central), id(central_mode).state);
+          panel_cache.sun_up = id(sun_up);
           panel_cache.magic = PANEL_CACHE_MAGIC;

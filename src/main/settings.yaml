@@ -1,4 +1,5 @@
-# Settings: colour scheme, brightness and "Sleep after". Each is an entity
+# Settings: mode (dark/light/auto), colour scheme, brightness and "Sleep
+# after". Each is an entity
 # (select/number, kept in flash, also in Home Assistant) and has a control
 # on the settings page (src/main/settings_page.yaml), opened with the ⋯
 # button top left. Also: when the screen dims and when it goes to sleep.
@@ -6,6 +7,7 @@
 esphome:
   includes:
     - ${project_dir}/src/main/schemes.h
+    - ${project_dir}/src/main/palette.h
   on_boot:
     - priority: -100
       then:
@@ -22,6 +24,15 @@ globals:
   - id: dimmed
     type: bool
     initial_value: "false"
+  # Sun from Home Assistant for Auto mode: 0 unknown, 1 up, 2 down (kept
+  # through deep sleep, src/main/power.yaml)
+  - id: sun_up
+    type: uint8_t
+    initial_value: "0"
+  # Theme colours made local (once) and the mode they are in
+  - id: look_ready
+    type: bool
+    initial_value: "false"
   # Current scheme's accents (src/main/schemes.h), used by the room refresh
   - id: accent_heat
     type: uint32_t
@@ -31,6 +42,23 @@ globals:
     initial_value: "0x${hex_idle}"
 
 select:
+  # Auto: light while the sun is up (Home Assistant's sun.sun), dark at night
+  - platform: template
+    id: appearance
+    name: Mode
+    icon: mdi:theme-light-dark
+    entity_category: config
+    options: [Dark, Light, Auto]
+    initial_option: ${default_mode}
+    optimistic: true
+    restore_value: true
+    on_value:
+      - if:
+          condition:
+            lambda: "return id(ui_ready);"
+          then:
+            - script.execute: apply_scheme
+
   - platform: template
     id: color_scheme
     name: Colour scheme
@@ -64,6 +92,21 @@ select:
             lambda: "return id(ui_ready);"
           then:
             - script.execute: refresh_settings
+
+text_sensor:
+  - platform: homeassistant
+    id: sun_state
+    entity_id: sun.sun
+    internal: true
+    on_value:
+      - lambda: |-
+          if (x == "above_horizon") id(sun_up) = 1;
+          else if (x == "below_horizon") id(sun_up) = 2;
+      - if:
+          condition:
+            lambda: "return id(ui_ready) && id(appearance).active_index() == 2;"
+          then:
+            - script.execute: apply_scheme
 
 number:
   - platform: template
@@ -122,16 +165,36 @@ script:
           call.set_brightness(id(brightness_setting).state / 100.0f);
           call.perform();
 
-  # Recolour everything that uses the accent, then redraw the rooms
+  # Mode and scheme: swap the neutral colours if the mode changed, recolour
+  # everything drawn in the accent, then redraw the rooms
   - id: apply_scheme
     then:
       - lambda: |-
+          lv_obj_t *roots[] = {lv_layer_top(), id(page_main)->obj, id(page_settings)->obj};
+          if (!id(look_ready)) {
+            for (lv_obj_t *r : roots) panel_localize(r);
+            id(look_ready) = true;
+          }
+          auto mode = id(appearance).active_index();
+          const int m = mode.has_value() ? (int) *mode : 2;
+          // Auto with the sun unknown (first boot without Home Assistant): dark
+          const bool light = m == 1 || (m == 2 && id(sun_up) == 1);
+          if (light != panel_light) {
+            for (lv_obj_t *r : roots) panel_recolor(r, light);
+            panel_light = light;
+          }
+          lv_obj_t *modes[] = {id(set_mode_0), id(set_mode_1), id(set_mode_2)};
+          for (int n = 0; n < 3; n++) {
+            if (n == m) lv_obj_add_state(modes[n], LV_STATE_CHECKED);
+            else lv_obj_remove_state(modes[n], LV_STATE_CHECKED);
+          }
+
           auto sel = id(color_scheme).active_index();
           const int k = sel.has_value() && (int) *sel < PANEL_SCHEME_COUNT ? (int) *sel : 0;
           const PanelScheme &s = PANEL_SCHEMES[k];
-          id(accent_heat) = s.heat;
-          id(accent_idle) = s.idle;
-          const lv_color_t heat = lv_color_hex(s.heat);
+          id(accent_heat) = light ? s.heat_light : s.heat;
+          id(accent_idle) = light ? s.idle_light : s.idle;
+          const lv_color_t heat = lv_color_hex(id(accent_heat));
           lv_obj_t *btns[] = {
             id(r0_p0), id(r0_p1), id(r0_p2), id(r0_p3), id(r0_power),
             id(r1_p0), id(r1_p1), id(r1_p2), id(r1_p3), id(r1_power),
@@ -139,6 +202,7 @@ script:
             id(r3_p0), id(r3_p1), id(r3_p2), id(r3_p3), id(r3_power),
             id(r4_p0), id(r4_p1), id(r4_p2), id(r4_p3), id(r4_power),
             id(set_sleep_0), id(set_sleep_1), id(set_sleep_2), id(set_sleep_3),
+            id(set_mode_0), id(set_mode_1), id(set_mode_2),
           };
           for (lv_obj_t *b : btns) {
             lv_obj_set_style_bg_color(b, heat, LV_PART_MAIN | LV_STATE_CHECKED);
@@ -150,7 +214,7 @@ script:
           lv_obj_t *sw[] = {id(set_scheme_0), id(set_scheme_1), id(set_scheme_2),
                             id(set_scheme_3), id(set_scheme_4), id(set_scheme_5)};
           for (int n = 0; n < 6 && n < PANEL_SCHEME_COUNT; n++) {
-            const lv_color_t c = lv_color_hex(PANEL_SCHEMES[n].heat);
+            const lv_color_t c = lv_color_hex(light ? PANEL_SCHEMES[n].heat_light : PANEL_SCHEMES[n].heat);
             lv_obj_set_style_bg_color(sw[n], c, LV_PART_MAIN);
             lv_obj_set_style_bg_color(sw[n], c, LV_PART_MAIN | LV_STATE_CHECKED);
             lv_obj_set_style_bg_color(sw[n], c, LV_PART_MAIN | LV_STATE_PRESSED);
@@ -158,6 +222,8 @@ script:
             else lv_obj_remove_state(sw[n], LV_STATE_CHECKED);
           }
           lv_label_set_text(id(set_scheme_lbl), s.name);
+          // Page dots are drawn by the tileview's value handler
+          lv_obj_send_event(id(tv_rooms), LV_EVENT_VALUE_CHANGED, nullptr);
       - script.execute: refresh_r0
       - script.execute: refresh_r1
       - script.execute: refresh_r2

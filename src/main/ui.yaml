@@ -114,7 +114,7 @@ lvgl:
                   for (int k = 0; k < 5; k++) {
                     const bool cur = tile == tiles[k];
                     lv_obj_set_width(dots[k], cur ? 18 : 6);
-                    lv_obj_set_style_bg_color(dots[k], lv_color_hex(cur ? 0x${hex_text} : 0x${hex_off}), 0);
+                    lv_obj_set_style_bg_color(dots[k], lv_color_hex(pal(cur ? 0x${hex_text} : 0x${hex_off})), 0);
                   }
             on_update: *update_dots
             tiles:

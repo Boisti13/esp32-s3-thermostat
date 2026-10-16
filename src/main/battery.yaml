@@ -55,5 +55,5 @@ sensor:
           const char *icon = x < 15 ? "${ic_battery_alert}" : x < 35 ? "${ic_battery_20}" : x < 70 ? "${ic_battery_50}" : "${ic_battery}";
           snprintf(buf, sizeof(buf), "%s %.0f%%", icon, x);
           lv_label_set_text(id(lbl_battery), buf);
-          lv_obj_set_style_text_color(id(lbl_battery), lv_color_hex(x < 15 ? 0x${hex_warn} : 0x${hex_text2}), 0);
+          lv_obj_set_style_text_color(id(lbl_battery), lv_color_hex(pal(x < 15 ? 0x${hex_warn} : 0x${hex_text2})), 0);
           lv_obj_remove_flag(id(lbl_battery), LV_OBJ_FLAG_HIDDEN);

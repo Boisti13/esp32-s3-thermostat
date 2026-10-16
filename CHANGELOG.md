@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.6.0 — 2026-10-16
+
+### Added
+
+- Light mode, and *Auto* (light while the sun is up, from Home Assistant's
+  `sun.sun`; the default). Three buttons next to the colour swatches, and a
+  *Mode* entity in Home Assistant. The last sun state survives deep sleep.
+- Light-mode variants of every colour scheme's accents.
+
+### Changed
+
+- Text on a selected button is dark on the accent (was white, unreadable
+  in the Mono scheme).
+
 ## v0.5.0 — 2026-10-16
 
 ### Added

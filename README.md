@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.5.0-orange)
+![Version](https://img.shields.io/badge/version-0.6.0-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -36,9 +36,11 @@ but works with any Home Assistant `climate` entity that heats.
   temperature, a flame while the main heating supply is on, and warning
   icons when the central mode is *Stopped* or Home Assistant isn't
   connected.
-- **Settings page** (⋯ top left): six colour schemes (Ember, Amber, Rose,
-  Forest, Ocean, Mono), brightness, and *Sleep after* (30 s, 1 min, 5 min,
-  Never). They are kept in flash and are also entities in Home Assistant.
+- **Settings page** (⋯ top left): *Mode* dark, light or auto (light while
+  the sun is up, from Home Assistant's `sun.sun`), six colour schemes
+  (Ember, Amber, Rose, Forest, Ocean, Mono), brightness, and *Sleep after*
+  (30 s, 1 min, 5 min, Never). They are kept in flash and are also entities
+  in Home Assistant.
 - **Runs on a battery**: dims after 15 s, deep-sleeps after *Sleep after*
   (1 min by default) with the backlight held off. A touch or the BOOT button wakes it, and it shows the
   last known values at once (kept in RTC memory) while it reconnects. A
@@ -53,6 +55,10 @@ but works with any Home Assistant `climate` entity that heats.
 | Settings | Ocean scheme |
 |---|---|
 | ![](docs/images/settings.png) | ![](docs/images/scheme-ocean.png) |
+
+| Light mode | Light mode settings |
+|---|---|
+| ![](docs/images/light.png) | ![](docs/images/light-settings.png) |
 
 ## Hardware
 
@@ -147,10 +153,12 @@ All of it lives in `src/main/entities.yaml`.
 | `main_valve_entity` | `switch.heat_exchanger` | flame in the status bar while on; `switch.none` = never |
 | `central_mode_entity` | `select.central_mode` | warning while *Stopped* |
 | `idle_dim_s`, `dim_brightness_f` | `15`, `0.15` | dim after 15 s to 15 % |
-| `default_brightness`, `default_sleep`, `default_scheme` | `70`, `1 min`, `Ember` | first-boot values of the settings |
+| `default_brightness`, `default_sleep`, `default_scheme`, `default_mode` | `70`, `1 min`, `Ember`, `Auto` | first-boot values of the settings |
 
-The settings themselves are entities: *Colour scheme* and *Sleep after*
-(select), *Brightness* (number), next to *Stay awake* and *Backlight*.
+The settings themselves are entities: *Mode*, *Colour scheme* and *Sleep
+after* (select), *Brightness* (number), next to *Stay awake* and
+*Backlight*. *Auto* mode reads `sun.sun`; the last sun state is kept through
+deep sleep, so the panel wakes in the right mode.
 
 From each climate entity the panel reads its state (`heat`/`off`) and the
 attributes `temperature`, `current_temperature`, `current_humidity`,
@@ -181,7 +189,8 @@ src/main/status.yaml       status bar logic (clock, outdoor, central mode)
 src/main/status_widgets.yaml   status bar and page dots
 src/main/settings.yaml     settings entities, colour schemes, dim/sleep timing
 src/main/settings_page.yaml    the settings page
-src/main/schemes.h         the colour schemes
+src/main/schemes.h         the colour schemes (dark and light accents)
+src/main/palette.h         dark/light colours and the switch
 src/main/power.yaml        deep sleep, wake pins, RTC value cache, Stay awake
 src/main/rtc_cache.h       the cache's layout
 src/main/battery.yaml      optional battery level (needs the mod)

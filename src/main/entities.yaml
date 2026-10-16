@@ -39,3 +39,4 @@ substitutions:
   default_brightness: "70"
   default_sleep: "1 min"
   default_scheme: "Ember"
+  default_mode: "Auto"   # Dark, Light or Auto (light while the sun is up)

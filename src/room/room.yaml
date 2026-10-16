@@ -110,7 +110,7 @@ script:
           if (t2 > hi) t2 = hi;
 
           // Colour of the dial: orange heating, blue on, grey off
-          const uint32_t accent = !on ? 0x${hex_off} : heating ? id(accent_heat) : id(accent_idle);
+          const uint32_t accent = !on ? pal(0x${hex_off}) : heating ? id(accent_heat) : id(accent_idle);
           lv_obj_t *arc = id(r${i}_arc);
           if (!lv_obj_has_state(arc, LV_STATE_PRESSED)) lv_arc_set_value(arc, t2);
           lv_obj_set_style_arc_color(arc, lv_color_hex(accent), LV_PART_INDICATOR);
@@ -137,7 +137,7 @@ script:
             lv_label_set_text(id(r${i}_target_lbl), buf);
             lv_obj_remove_flag(id(r${i}_degree_lbl), LV_OBJ_FLAG_HIDDEN);
           }
-          lv_obj_set_style_text_color(id(r${i}_target_lbl), lv_color_hex(on ? 0x${hex_text} : 0x${hex_text2}), 0);
+          lv_obj_set_style_text_color(id(r${i}_target_lbl), lv_color_hex(pal(on ? 0x${hex_text} : 0x${hex_text2})), 0);
 
           // Status line above the target
           uint32_t scol = accent;
@@ -145,7 +145,7 @@ script:
             snprintf(buf, sizeof(buf), "NO DATA");
           } else if (window) {
             snprintf(buf, sizeof(buf), "${ic_window} WINDOW OPEN");
-            scol = 0x${hex_warn};
+            scol = pal(0x${hex_warn});
           } else if (!on) {
             snprintf(buf, sizeof(buf), "HEATING OFF");
           } else if (heating) {
@@ -170,7 +170,7 @@ script:
           if (isnan(valve)) snprintf(buf, sizeof(buf), "–");
           else snprintf(buf, sizeof(buf), "%.0f%%", valve);
           lv_label_set_text(id(r${i}_valve_lbl), buf);
-          lv_obj_set_style_text_color(id(r${i}_valve_icon), lv_color_hex(heating ? id(accent_heat) : 0x${hex_text2}), 0);
+          lv_obj_set_style_text_color(id(r${i}_valve_icon), lv_color_hex(heating ? id(accent_heat) : pal(0x${hex_text2})), 0);
 
           // Presets: the active one is highlighted (only while on)
           static const char *const PRESETS[4] = {"comfort", "eco", "frost", "boost"};

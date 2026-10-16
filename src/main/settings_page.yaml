@@ -3,8 +3,8 @@
 #
 #  ┌──────────────────────────────────────────────┐
 #  │ ‹ Settings                     ☁ 9.5°  17:07 │
-#  │ Colour  Ember                                │
-#  │ (●) (●) (●) (●) (●) (●)                      │
+#  │ Colour  Ember                     Mode       │
+#  │ (●) (●) (●) (●) (●) (●)        [☾] [☀] [◐]   │
 #  │ Brightness                              70%  │
 #  │ ━━━━━━━━━━━━━━━━━━━━━━━━━●─────────────      │
 #  │ Sleep after                                  │
@@ -54,33 +54,63 @@ widgets:
   - button:
       <<: *swatch
       id: set_scheme_1
-      x: 66
+      x: 62
       on_click:
         - select.set_index: { id: color_scheme, index: 1 }
   - button:
       <<: *swatch
       id: set_scheme_2
-      x: 118
+      x: 110
       on_click:
         - select.set_index: { id: color_scheme, index: 2 }
   - button:
       <<: *swatch
       id: set_scheme_3
-      x: 170
+      x: 158
       on_click:
         - select.set_index: { id: color_scheme, index: 3 }
   - button:
       <<: *swatch
       id: set_scheme_4
-      x: 222
+      x: 206
       on_click:
         - select.set_index: { id: color_scheme, index: 4 }
   - button:
       <<: *swatch
       id: set_scheme_5
-      x: 274
+      x: 254
       on_click:
         - select.set_index: { id: color_scheme, index: 5 }
+
+  # Mode: light, dark, auto (by the sun)
+  - label: { x: 322, y: 46, text: "Mode", text_font: font_small, text_color: col_text2 }
+  - button: &mode_btn
+      id: set_mode_0
+      x: 322
+      y: 66
+      width: 44
+      height: 40
+      pad_all: 0
+      widgets:
+        - label: { align: CENTER, text: "${ic_moon}", text_font: font_icon }
+      on_click:
+        - select.set_index: { id: appearance, index: 0 }
+  - button:
+      <<: *mode_btn
+      id: set_mode_1
+      x: 372
+      widgets:
+        - label: { align: CENTER, text: "${ic_sun}", text_font: font_icon }
+      on_click:
+        - select.set_index: { id: appearance, index: 1 }
+  - button:
+      <<: *mode_btn
+      id: set_mode_2
+      x: 422
+      widgets:
+        - label: { align: CENTER, text: "${ic_auto}", text_font: font_icon }
+      on_click:
+        - select.set_index: { id: appearance, index: 2 }
 
   # Brightness (while in use; dimmed after a few seconds without a touch)
   - label: { x: 14, y: 118, text: "Brightness", text_font: font_small, text_color: col_text2 }

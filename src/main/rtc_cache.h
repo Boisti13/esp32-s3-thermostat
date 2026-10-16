@@ -7,7 +7,7 @@
 #include <string>
 #include "esp_attr.h"
 
-static const uint32_t PANEL_CACHE_MAGIC = 0x7E3A0001;  // bump when the layout changes
+static const uint32_t PANEL_CACHE_MAGIC = 0x7E3A0002;  // bump when the layout changes
 
 struct RoomCache {
   float tgt, cur, hum, valve, lo, hi;
@@ -21,6 +21,7 @@ struct PanelCache {
   float outdoor;
   bool main_valve;
   char central[24];
+  uint8_t sun_up;  // 0 unknown, 1 up, 2 down
 };
 
 RTC_DATA_ATTR PanelCache panel_cache;

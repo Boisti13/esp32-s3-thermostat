@@ -110,22 +110,25 @@ script:
       - light.turn_off: backlight
       - lvgl.pause:
 
-# Show each room in turn, then the settings page, then room 0 in the Ocean
-# scheme (for the screenshot script)
+# Show each room in turn, then the settings page, room 0 in the Ocean
+# scheme, and room 0 and the settings page in light mode (for the
+# screenshot script)
 interval:
   - interval: 3s
     then:
       - lambda: |-
           static int n = -1;   // first run (at boot) shows room 0
-          n = (n + 1) % 7;
-          if (n == 5) { id(show_settings).execute(); return; }
-          if (n == 6) {
-            id(show_rooms).execute();
-            id(color_scheme).make_call().set_option("Ocean").perform();
-            n = 0;
-          } else if (n == 0) {
-            id(color_scheme).make_call().set_option("Ember").perform();
+          n = (n + 1) % 9;
+          auto scheme = [](const char *name) { id(color_scheme).make_call().set_option(name).perform(); };
+          auto mode = [](const char *name) { id(appearance).make_call().set_option(name).perform(); };
+          int tile = n;
+          switch (n) {
+            case 0: mode("Dark"); scheme("Ember"); break;
+            case 5: id(show_settings).execute(); return;
+            case 6: id(show_rooms).execute(); scheme("Ocean"); tile = 0; break;
+            case 7: scheme("Ember"); mode("Light"); tile = 0; break;
+            case 8: id(show_settings).execute(); return;
           }
           lv_obj_t *tiles[5] = {id(tile_r0), id(tile_r1), id(tile_r2), id(tile_r3), id(tile_r4)};
-          lv_tileview_set_tile(id(tv_rooms), tiles[n], LV_ANIM_OFF);
+          lv_tileview_set_tile(id(tv_rooms), tiles[tile], LV_ANIM_OFF);
           lv_obj_send_event(id(tv_rooms), LV_EVENT_VALUE_CHANGED, nullptr);

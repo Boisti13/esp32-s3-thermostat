@@ -69,7 +69,11 @@ while awake. For OTA, wake it and turn on its *Stay awake* switch.
   `apply_scheme` (src/main/settings.yaml). A new scheme goes into
   `src/main/schemes.h` and the select's options, in the same order.
 - Dark fills look tinted and stair-stepped on this panel: keep the
-  background black, use outlines and bright fills only. Icons as `ic_*`
+  background black, use outlines and bright fills only.
+- Light mode: YAML is written in the dark colours; `src/main/palette.h`
+  maps each to its light counterpart and swaps all widgets' colours when
+  the mode changes. A new neutral colour needs a pair there; lambdas wrap
+  neutral colours in `pal()`. Icons as `ic_*`
   substitutions; a new icon must also go into the `glyphs`/`extras` of every
   font that shows it.
 - In YAML flow mappings (`{ ... }`) quote any value containing `${...}`, or
