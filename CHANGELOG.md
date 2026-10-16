@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.3 — 2026-10-16
+
+### Added
+
+- *Wake reason* sensor and log line: what started the panel (touch, BOOT
+  button, power on, RST button, restart/update, crash, watchdog,
+  brownout).
+
 ## v1.0.2 — 2026-10-16
 
 ### Fixed

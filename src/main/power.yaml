@@ -13,7 +13,34 @@ esphome:
     # Before the backlight output starts: release the pin held low in sleep
     - priority: 900
       then:
-        - lambda: "gpio_hold_dis(GPIO_NUM_1);"
+        - lambda: |-
+            gpio_hold_dis(GPIO_NUM_1);
+            // Why this boot: woken by touch/BOOT, or a reset of some kind
+            const char *why = "other";
+            if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT1) {
+              const uint64_t pins = esp_sleep_get_ext1_wakeup_status();
+              why = (pins & (1ULL << 3)) ? "touch" : (pins & 1ULL) ? "BOOT button" : "wake pin";
+            } else {
+              switch (esp_reset_reason()) {
+                case ESP_RST_POWERON: why = "power on"; break;
+                case ESP_RST_EXT: why = "RST button"; break;
+                case ESP_RST_SW: why = "restart/update"; break;
+                case ESP_RST_PANIC: why = "crash"; break;
+                case ESP_RST_INT_WDT:
+                case ESP_RST_TASK_WDT:
+                case ESP_RST_WDT: why = "watchdog"; break;
+                case ESP_RST_BROWNOUT: why = "brownout (low battery?)"; break;
+                default: break;
+              }
+            }
+            id(wake_reason_text) = why;
+            ESP_LOGI("wake", "boot reason: %s", why);
+    # Logs before the API is up only reach the serial port: publish it too
+    - priority: -100
+      then:
+        - text_sensor.template.publish:
+            id: wake_reason
+            state: !lambda "return id(wake_reason_text);"
     # Sensors exist, Wi-Fi isn't up yet: show what we knew before sleeping
     - priority: -50
       then:
@@ -67,6 +94,21 @@ deep_sleep:
         mode:
           input: true
           pullup: true
+
+globals:
+  - id: wake_reason_text
+    type: std::string
+    initial_value: '"other"'
+
+# Last boot's reason (touch, BOOT button, power on, RST button, restart,
+# crash, watchdog, brownout): shows spurious wake-ups, which drain the battery
+text_sensor:
+  - platform: template
+    id: wake_reason
+    name: Wake reason
+    icon: mdi:alarm-light-outline
+    entity_category: diagnostic
+    update_interval: never
 
 switch:
   - platform: template

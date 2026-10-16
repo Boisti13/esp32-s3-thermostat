@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-1.0.2-orange)
+![Version](https://img.shields.io/badge/version-1.0.3-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -123,6 +123,9 @@ awake (screen on) or in deep sleep (screen off).
   removing the power LED and swapping the regulator for a low-quiescent
   one (e.g. ME6211/HT7333); that is the difference between days and months
   per charge.
+- **Wake reason** (diagnostic sensor in Home Assistant, also in the log):
+  touch, BOOT button, power on, RST button, restart/update, crash,
+  watchdog or brownout. Wake-ups nobody asked for would show up here.
 - **Stay awake** (switch in Home Assistant): no deep sleep, just a dark
   screen. Turn it on before an OTA update; the device can only be reached
   while awake, so wake it with a touch first. *Sleep after: Never* keeps it

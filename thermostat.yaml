@@ -26,7 +26,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "boisti13.esp32-s3-thermostat"
-    version: "1.0.2"
+    version: "1.0.3"
   on_boot:
     - priority: -100
       then:
@@ -38,6 +38,11 @@ logger:
 api:
   encryption:
     key: !secret thermostat_api_key
+  # Repeat the boot reason for log viewers (the boot log is gone by then)
+  on_client_connected:
+    - logger.log:
+        format: "boot reason: %s"
+        args: ["id(wake_reason_text).c_str()"]
 
 ota:
   - platform: esphome
