@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.3.3 — 2026-10-16
+
+### Changed
+
+- Black background and neutral greys. The panel stretches dark shades and
+  tints them teal: the old navy cards came out bright teal, and the uneven
+  dark tones made rounded corners and the dial look stair-stepped.
+
 ## v0.3.2 — 2026-10-16
 
 ### Fixed

@@ -3,16 +3,19 @@
 # a col_* colour (used in YAML styles). Change the hex_* value only.
 
 substitutions:
-  hex_bg: "0B0F16"        # screen background
-  hex_card: "161C27"      # tiles, buttons
-  hex_card_hi: "222B3A"   # pressed
-  hex_track: "232C3B"     # arc background
-  hex_text: "EEF2F7"
-  hex_text2: "8B96A8"     # captions, secondary values
+  # This panel stretches dark shades a lot and tints them teal (the old navy
+  # #161C27 came out bright teal). So: pure black background, neutral greys
+  # (R = G = B), dark tones darker than they look on a monitor.
+  hex_bg: "000000"        # screen background (black stays black)
+  hex_card: "121212"      # tiles, buttons
+  hex_card_hi: "242424"   # pressed
+  hex_track: "1A1A1A"     # arc background
+  hex_text: "F0F0F0"
+  hex_text2: "9A9A9A"     # captions, secondary values
   hex_heat: "FF7A2F"      # heating
-  hex_heat_soft: "3B2417" # selected preset background
+  hex_heat_soft: "2A1408" # selected preset background
   hex_idle: "4C9BFF"      # on, not heating right now
-  hex_off: "4A5466"       # off
+  hex_off: "3C3C3C"       # off
   hex_warn: "FFC042"      # window open, central mode stopped, no connection
 
   # Icons (Material Design Icons code points)
