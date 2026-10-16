@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.2 — 2026-10-16
+
+### Fixed
+
+- Swiping did nothing: the swipe went past the room view to the screen, so
+  the handler never saw it.
+
 ## v0.3.1 — 2026-10-16
 
 ### Fixed

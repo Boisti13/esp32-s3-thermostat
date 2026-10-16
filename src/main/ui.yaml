@@ -7,8 +7,12 @@ esphome:
     - priority: -100
       then:
         # Swipe left = next room, right = previous. Gestures from anything on
-        # a tile bubble up to the tileview (the dial opts out).
+        # a tile bubble up to the tileview and stop there (the dial opts out).
         - lambda: |-
+            // A scrollable tile would start a (tiny, elastic) scroll and
+            // LVGL drops the gesture; tiles never need to scroll.
+            for (uint32_t k = 0; k < lv_obj_get_child_count(id(tv_rooms)); k++)
+              lv_obj_remove_flag(lv_obj_get_child(id(tv_rooms), k), LV_OBJ_FLAG_SCROLLABLE);
             lv_obj_add_event_cb(id(tv_rooms), [](lv_event_t *e) {
               lv_obj_t *tv = (lv_obj_t *) lv_event_get_current_target(e);
               const lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_active());
@@ -102,6 +106,9 @@ lvgl:
             # screen over SPI (~6 fps). A swipe switches rooms in one redraw
             # instead (gesture handler in esphome.on_boot below).
             scrollable: false
+            # Gestures bubble up to the first parent without this flag; stop
+            # them here so the handler below gets them (not the screen)
+            gesture_bubble: false
             # Page dots: the current room's dot is a wide bar. on_value: swiped,
             # on_update: selected by the idle timeout.
             on_value: &update_dots
