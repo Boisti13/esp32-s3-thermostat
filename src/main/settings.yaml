@@ -108,6 +108,29 @@ text_sensor:
           then:
             - script.execute: apply_scheme
 
+switch:
+  # Off: before deep sleep the touch controller sleeps too (saves a few mA)
+  # and only the BOOT button wakes the panel (src/main/power.yaml)
+  - platform: template
+    id: wake_by_touch
+    name: Wake by touch
+    icon: mdi:gesture-tap
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    on_turn_on:
+      - if:
+          condition:
+            lambda: "return id(ui_ready);"
+          then:
+            - script.execute: refresh_settings
+    on_turn_off:
+      - if:
+          condition:
+            lambda: "return id(ui_ready);"
+          then:
+            - script.execute: refresh_settings
+
 number:
   - platform: template
     id: brightness_setting
@@ -210,6 +233,7 @@ script:
           }
           lv_obj_set_style_text_color(id(lbl_main_valve), heat, 0);
           lv_obj_set_style_bg_color(id(set_brightness_slider), heat, LV_PART_INDICATOR);
+          lv_obj_set_style_bg_color(id(set_touch_wake), heat, LV_PART_INDICATOR | LV_STATE_CHECKED);
           // Swatches show their own scheme; the current one gets a ring
           lv_obj_t *sw[] = {id(set_scheme_0), id(set_scheme_1), id(set_scheme_2),
                             id(set_scheme_3), id(set_scheme_4), id(set_scheme_5)};
@@ -247,6 +271,8 @@ script:
             if (sel.has_value() && (int) *sel == n) lv_obj_add_state(sl[n], LV_STATE_CHECKED);
             else lv_obj_remove_state(sl[n], LV_STATE_CHECKED);
           }
+          if (id(wake_by_touch).state) lv_obj_add_state(id(set_touch_wake), LV_STATE_CHECKED);
+          else lv_obj_remove_state(id(set_touch_wake), LV_STATE_CHECKED);
           // Info line: version, address, signal
           std::string info;
           #ifdef ESPHOME_PROJECT_VERSION

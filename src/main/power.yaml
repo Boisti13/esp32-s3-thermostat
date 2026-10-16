@@ -16,6 +16,7 @@ esphome:
       then:
         - lambda: |-
             gpio_hold_dis(GPIO_NUM_1);
+            gpio_hold_dis(GPIO_NUM_3);   // touch INT, held low if touch wake was off
             // Why this boot: woken by touch/BOOT, or a reset of some kind
             const char *why = "other";
             if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT1) {
@@ -160,6 +161,22 @@ script:
       - delay: 20ms
       - lambda: "panel_command(id(main_display), 0x10);"
       - delay: 120ms
+      # Wake pins: BOOT always, the touch INT only with Wake by touch. Without
+      # it the touch controller sleeps too (INT low, then 0x05 to 0x8040);
+      # the driver's reset at the next boot wakes it.
+      - lambda: |-
+          uint64_t mask = 1ULL << 0;   // BOOT
+          if (id(wake_by_touch).state) {
+            mask |= 1ULL << 3;
+          } else {
+            gpio_set_direction(GPIO_NUM_3, GPIO_MODE_OUTPUT);
+            gpio_set_level(GPIO_NUM_3, 0);
+            delay(5);
+            const uint8_t sleep_cmd = 0x05;
+            id(main_touch)->write_register16(0x8040, &sleep_cmd, 1);
+            gpio_hold_en(GPIO_NUM_3);
+          }
+          id(sleep_ctl)->set_ext1_wakeup({mask, ESP_EXT1_WAKEUP_ANY_LOW});
       # Keep the backlight driver off while sleeping (the pin would float)
       - lambda: |-
           gpio_set_direction(GPIO_NUM_1, GPIO_MODE_OUTPUT);

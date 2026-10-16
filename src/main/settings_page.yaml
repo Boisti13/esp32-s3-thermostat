@@ -7,8 +7,8 @@
 #  │ (●) (●) (●) (●) (●) (●)        [☾] [☀] [◐]   │
 #  │ Brightness                              70%  │
 #  │ ━━━━━━━━━━━━━━━━━━━━━━━━━●─────────────      │
-#  │ Sleep after                                  │
-#  │ [ 30 s ] [ 1 min ] [ 5 min ] [ Never ]       │
+#  │ Sleep after                 Wake by touch    │
+#  │ [30 s] [1 min] [5 min] [Never]    (  ●)      │
 #  │ v0.5.0   192.168.178.140   Wi-Fi -58 dBm     │
 #  └──────────────────────────────────────────────┘
 
@@ -150,7 +150,7 @@ widgets:
       id: set_sleep_0
       x: 14
       y: 188
-      width: 105
+      width: 80
       height: 38
       widgets:
         - label: { align: CENTER, text: "30 s", text_font: font_body }
@@ -159,7 +159,7 @@ widgets:
   - button:
       <<: *sleep_btn
       id: set_sleep_1
-      x: 128
+      x: 100
       widgets:
         - label: { align: CENTER, text: "1 min", text_font: font_body }
       on_click:
@@ -167,7 +167,7 @@ widgets:
   - button:
       <<: *sleep_btn
       id: set_sleep_2
-      x: 242
+      x: 186
       widgets:
         - label: { align: CENTER, text: "5 min", text_font: font_body }
       on_click:
@@ -175,10 +175,35 @@ widgets:
   - button:
       <<: *sleep_btn
       id: set_sleep_3
-      x: 356
+      x: 272
       widgets:
         - label: { align: CENTER, text: "Never", text_font: font_body }
       on_click:
         - select.set_index: { id: sleep_after, index: 3 }
+
+  # Wake by touch (off: the touch controller sleeps too, only BOOT wakes it)
+  - label: { x: 372, y: 168, text: "Wake by touch", text_font: font_small, text_color: col_text2 }
+  - switch:
+      id: set_touch_wake
+      x: 380
+      y: 192
+      width: 60
+      height: 30
+      bg_color: col_track
+      bg_opa: COVER
+      indicator:
+        bg_color: col_track
+        bg_opa: COVER
+      knob:
+        bg_color: col_text
+        pad_all: -3
+      on_value:
+        - if:
+            condition:
+              lambda: "return x;"
+            then:
+              - switch.turn_on: wake_by_touch
+            else:
+              - switch.turn_off: wake_by_touch
 
   - label: { id: set_info_lbl, x: 14, y: 246, text: "", text_font: font_small, text_color: col_text2 }

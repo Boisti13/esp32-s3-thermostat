@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.1.0 — 2026-10-16
+
+### Added
+
+- *Wake by touch* setting (settings page and Home Assistant, on by
+  default). Off: the touch controller is put to sleep with the panel and
+  only the BOOT button wakes it, for less current in deep sleep.
+
 ## v1.0.4 — 2026-10-16
 
 ### Fixed

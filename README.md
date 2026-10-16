@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-1.0.4-orange)
+![Version](https://img.shields.io/badge/version-1.1.0-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -39,8 +39,8 @@ but works with any Home Assistant `climate` entity that heats.
 - **Settings page** (⋯ top left): *Mode* dark, light or auto (light while
   the sun is up, from Home Assistant's `sun.sun`), six colour schemes
   (Ember, Amber, Rose, Forest, Ocean, Mono), brightness, and *Sleep after*
-  (30 s, 1 min, 5 min, Never). They are kept in flash and are also entities
-  in Home Assistant.
+  (30 s, 1 min, 5 min, Never), *Wake by touch*. They are kept in flash and
+  are also entities in Home Assistant.
 - **Runs on a battery**: dims after 15 s, deep-sleeps after *Sleep after*
   (1 min by default) with the backlight held off. A touch or the BOOT button wakes it, and it shows the
   last known values at once (kept in RTC memory) while it reconnects. A
@@ -113,6 +113,8 @@ awake (screen on) or in deep sleep (screen off).
 | Deep sleep (after *Sleep after*) | ESP32 off, touch controller on | board-dependent, see below |
 
 - **Wake-up**: a touch anywhere (GT911 INT on GPIO3) or the BOOT button.
+  With *Wake by touch* off (settings page or Home Assistant) the touch
+  controller sleeps too and only BOOT wakes the panel, for a few mA less.
   RST works too but is a full restart: the kept values are gone and the
   rooms stay empty until Home Assistant is back. After a wake the screen is up in about a
   second with the last values; live data follows in 2–4 s (Wi-Fi with
