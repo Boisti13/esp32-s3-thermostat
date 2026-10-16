@@ -10,7 +10,6 @@ esphome:
   includes:
     - ${project_dir}/src/main/rtc_cache.h
     - ${project_dir}/src/main/panel_cmd.h
-    - ${project_dir}/src/main/sleep_pins.h
   on_boot:
     # Before the backlight output starts: release the pin held low in sleep
     - priority: 900
@@ -18,7 +17,6 @@ esphome:
         - lambda: |-
             gpio_hold_dis(GPIO_NUM_1);
             gpio_hold_dis(GPIO_NUM_3);   // touch INT, held low if touch wake was off
-            sleep_pins_release();        // bus, I2C, amp, SD (sleep_pins.h)
             // Why this boot: woken by touch/BOOT, or a reset of some kind
             const char *why = "other";
             if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT1) {
@@ -179,8 +177,6 @@ script:
             gpio_hold_en(GPIO_NUM_3);
           }
           id(sleep_ctl)->set_ext1_wakeup({mask, ESP_EXT1_WAKEUP_ANY_LOW});
-          // No floating inputs on the panel, touch, amp or SD while asleep
-          sleep_pins_hold();
       # Keep the backlight driver off while sleeping (the pin would float)
       - lambda: |-
           gpio_set_direction(GPIO_NUM_1, GPIO_MODE_OUTPUT);

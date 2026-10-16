@@ -1,12 +1,20 @@
 # Changelog
 
+## v1.1.2 — 2026-10-16
+
+### Fixed
+
+- Waking was slow and touch stopped working after v1.1.1: the touch and
+  display buses start before the held pins were released. The pin holding
+  is removed again; it made no difference to the sleep current (still
+  ~42 mA with touch wake, measured).
+
 ## v1.1.1 — 2026-10-16
 
 ### Changed
 
-- Deep sleep holds the display bus, touch I²C, audio amplifier and SD card
-  pins at fixed levels instead of letting them float (an attempt to bring
-  the remaining ~39 mA down).
+- Deep sleep held the display bus, touch I²C, audio amplifier and SD card
+  pins at fixed levels (removed again in v1.1.2).
 
 ## v1.1.0 — 2026-10-16
 
