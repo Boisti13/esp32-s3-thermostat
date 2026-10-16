@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.1.1 — 2026-10-16
+
+### Changed
+
+- Deep sleep holds the display bus, touch I²C, audio amplifier and SD card
+  pins at fixed levels instead of letting them float (an attempt to bring
+  the remaining ~39 mA down).
+
 ## v1.1.0 — 2026-10-16
 
 ### Added
