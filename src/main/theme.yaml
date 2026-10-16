@@ -1,0 +1,102 @@
+# Colours, fonts and shared LVGL styles. Every colour exists twice: as a
+# hex_* substitution (used in C++ lambdas as lv_color_hex(0x${hex_*})) and as
+# a col_* colour (used in YAML styles). Change the hex_* value only.
+
+substitutions:
+  hex_bg: "0B0F16"        # screen background
+  hex_card: "161C27"      # tiles, buttons
+  hex_card_hi: "222B3A"   # pressed
+  hex_track: "232C3B"     # arc background
+  hex_text: "EEF2F7"
+  hex_text2: "8B96A8"     # captions, secondary values
+  hex_heat: "FF7A2F"      # heating
+  hex_heat_soft: "3B2417" # selected preset background
+  hex_idle: "4C9BFF"      # on, not heating right now
+  hex_off: "4A5466"       # off
+  hex_warn: "FFC042"      # window open, central mode stopped, no connection
+
+  # Icons (Material Design Icons code points)
+  ic_fire: "\U000F0238"
+  ic_power: "\U000F0425"
+  ic_leaf: "\U000F032A"
+  ic_snowflake: "\U000F0717"
+  ic_rocket: "\U000F14DE"
+  ic_sofa: "\U000F04B9"
+  ic_water: "\U000F058E"
+  ic_thermometer: "\U000F050F"
+  ic_window: "\U000F11DC"
+  ic_plus: "\U000F0415"
+  ic_minus: "\U000F0374"
+  ic_valve: "\U000F1066"
+  ic_cloud: "\U000F0595"
+  ic_stop: "\U000F0667"
+  ic_offline: "\U000F0319"
+
+  text_glyphs: " !#%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz|°·–"
+
+color:
+  - { id: col_bg, hex: "${hex_bg}" }
+  - { id: col_card, hex: "${hex_card}" }
+  - { id: col_card_hi, hex: "${hex_card_hi}" }
+  - { id: col_track, hex: "${hex_track}" }
+  - { id: col_text, hex: "${hex_text}" }
+  - { id: col_text2, hex: "${hex_text2}" }
+  - { id: col_heat, hex: "${hex_heat}" }
+  - { id: col_heat_soft, hex: "${hex_heat_soft}" }
+  - { id: col_idle, hex: "${hex_idle}" }
+  - { id: col_off, hex: "${hex_off}" }
+  - { id: col_warn, hex: "${hex_warn}" }
+
+font:
+  # Big target temperature in the dial
+  - file: { type: gfonts, family: Inter, weight: 300 }
+    id: font_target
+    size: 60
+    bpp: 4
+    glyphs: "0123456789.-–Of"
+  - file: { type: gfonts, family: Inter, weight: 300 }
+    id: font_degree
+    size: 30
+    bpp: 4
+    glyphs: "°"
+  # Room name
+  - file: { type: gfonts, family: Inter, weight: 600 }
+    id: font_title
+    size: 20
+    bpp: 4
+    glyphs: "${text_glyphs}"
+    extras:
+      - file: ${project_dir}/src/assets/fonts/materialdesignicons-webfont.ttf
+        glyphs: ["${ic_window}"]
+  # Values: room temperature, humidity, status bar
+  - file: { type: gfonts, family: Inter, weight: 500 }
+    id: font_body
+    size: 16
+    bpp: 4
+    glyphs: "${text_glyphs}"
+    extras:
+      - file: ${project_dir}/src/assets/fonts/materialdesignicons-webfont.ttf
+        glyphs: ["${ic_fire}", "${ic_thermometer}", "${ic_water}", "${ic_valve}",
+                 "${ic_cloud}", "${ic_stop}", "${ic_offline}", "${ic_power}", "${ic_window}"]
+  # Big values on the stat tiles
+  - file: { type: gfonts, family: Inter, weight: 600 }
+    id: font_value
+    size: 22
+    bpp: 4
+    glyphs: "0123456789.,-–% °"
+  # Captions and the status line above the target
+  - file: { type: gfonts, family: Inter, weight: 600 }
+    id: font_small
+    size: 12
+    bpp: 4
+    glyphs: "${text_glyphs}"
+    extras:
+      - file: ${project_dir}/src/assets/fonts/materialdesignicons-webfont.ttf
+        glyphs: ["${ic_fire}", "${ic_window}", "${ic_stop}", "${ic_water}", "${ic_valve}"]
+  # Icons on buttons and tiles
+  - file: ${project_dir}/src/assets/fonts/materialdesignicons-webfont.ttf
+    id: font_icon
+    size: 24
+    bpp: 4
+    glyphs: ["${ic_sofa}", "${ic_leaf}", "${ic_snowflake}", "${ic_rocket}", "${ic_power}",
+             "${ic_plus}", "${ic_minus}"]

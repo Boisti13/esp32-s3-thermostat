@@ -1,0 +1,107 @@
+# The panel's UI on a PC: same screen, SDL window instead of the board,
+# made-up values instead of Home Assistant. Used for the README screenshots
+# (scripts/screenshots.sh on Linux); handy for trying out layout changes
+# without flashing.
+#
+#   esphome run demo/screenshot.yaml     # needs libsdl2-dev
+
+substitutions:
+  project_dir: ".."
+  device_name: thermostat-demo
+  friendly_name: Thermostat Demo
+
+packages:
+  entities: !include ../src/main/entities.yaml
+  theme: !include ../src/main/theme.yaml
+  status: !include ../src/main/status.yaml
+  ui: !include ../src/main/ui.yaml
+  room_0: !include { file: ../src/room/room.yaml, vars: { i: "0", entity: "${room_0_entity}", window: "${room_0_window}" } }
+  room_1: !include { file: ../src/room/room.yaml, vars: { i: "1", entity: "${room_1_entity}", window: "${room_1_window}" } }
+  room_2: !include { file: ../src/room/room.yaml, vars: { i: "2", entity: "${room_2_entity}", window: "${room_2_window}" } }
+  room_3: !include { file: ../src/room/room.yaml, vars: { i: "3", entity: "${room_3_entity}", window: "${room_3_window}" } }
+  room_4: !include { file: ../src/room/room.yaml, vars: { i: "4", entity: "${room_4_entity}", window: "${room_4_window}" } }
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  on_boot:
+    - priority: -100
+      then:
+        - lambda: |-
+            // room: mode, action, preset, target, current, humidity, valve, window
+            struct Demo { const char *mode, *action, *preset; float tgt, cur, hum, valve; bool window; };
+            static const Demo D[5] = {
+              {"heat", "heating", "comfort", 21.5, 20.4, 55, 38, false},
+              {"heat", "idle",    "eco",     19.0, 19.6, 59, 0,  false},
+              {"heat", "idle",    "frost",   5.0,  18.2, 62, 0,  true},
+              {"off",  "off",     "none",    5.0,  22.0, 55, 0,  false},
+              {"heat", "heating", "boost",   23.0, 21.2, 71, 80, false},
+            };
+            sensor::Sensor *tgt[5] = {id(r0_target), id(r1_target), id(r2_target), id(r3_target), id(r4_target)};
+            sensor::Sensor *cur[5] = {id(r0_current), id(r1_current), id(r2_current), id(r3_current), id(r4_current)};
+            sensor::Sensor *hum[5] = {id(r0_humidity), id(r1_humidity), id(r2_humidity), id(r3_humidity), id(r4_humidity)};
+            sensor::Sensor *valve[5] = {id(r0_valve), id(r1_valve), id(r2_valve), id(r3_valve), id(r4_valve)};
+            sensor::Sensor *lo[5] = {id(r0_min), id(r1_min), id(r2_min), id(r3_min), id(r4_min)};
+            sensor::Sensor *hi[5] = {id(r0_max), id(r1_max), id(r2_max), id(r3_max), id(r4_max)};
+            text_sensor::TextSensor *mode[5] = {id(r0_mode), id(r1_mode), id(r2_mode), id(r3_mode), id(r4_mode)};
+            text_sensor::TextSensor *action[5] = {id(r0_action), id(r1_action), id(r2_action), id(r3_action), id(r4_action)};
+            text_sensor::TextSensor *preset[5] = {id(r0_preset), id(r1_preset), id(r2_preset), id(r3_preset), id(r4_preset)};
+            binary_sensor::BinarySensor *window[5] = {id(r0_window), id(r1_window), id(r2_window), id(r3_window), id(r4_window)};
+            for (int k = 0; k < 5; k++) {
+              lo[k]->publish_state(5); hi[k]->publish_state(25);
+              tgt[k]->publish_state(D[k].tgt); cur[k]->publish_state(D[k].cur);
+              hum[k]->publish_state(D[k].hum); valve[k]->publish_state(D[k].valve);
+              mode[k]->publish_state(D[k].mode); action[k]->publish_state(D[k].action);
+              preset[k]->publish_state(D[k].preset); window[k]->publish_state(D[k].window);
+            }
+            id(outdoor_temp).publish_state(9.5);
+            id(main_valve).publish_state(true);
+            id(central_mode).publish_state("Heat only");
+            id(ha_connected) = true;
+        - script.execute: refresh_status
+
+host:
+
+logger:
+  level: INFO
+
+# Status bar and room sensors are Home Assistant sensors; the API makes them
+# compile, nothing connects in the demo.
+api:
+
+display:
+  - platform: sdl
+    id: main_display
+    dimensions:
+      width: 480
+      height: 272
+    update_interval: never
+    auto_clear_enabled: false
+
+touchscreen:
+  - platform: sdl
+    id: main_touch
+    display: main_display
+
+output:
+  - platform: template
+    id: backlight_pwm
+    type: float
+    write_action: []
+
+light:
+  - platform: monochromatic
+    id: backlight
+    output: backlight_pwm
+    restore_mode: ALWAYS_ON
+
+# Show each room in turn (for the screenshot script)
+interval:
+  - interval: 3s
+    then:
+      - lambda: |-
+          static int n = -1;   // first run (at boot) shows room 0
+          n = (n + 1) % 5;
+          lv_obj_t *tiles[5] = {id(tile_r0), id(tile_r1), id(tile_r2), id(tile_r3), id(tile_r4)};
+          lv_tileview_set_tile(id(tv_rooms), tiles[n], LV_ANIM_OFF);
+          lv_obj_send_event(id(tv_rooms), LV_EVENT_VALUE_CHANGED, nullptr);

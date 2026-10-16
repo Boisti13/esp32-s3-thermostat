@@ -1,0 +1,243 @@
+# One room's tile in the swipeable tileview: dial on the left, humidity and
+# valve tiles, presets and the power button on the right. thermostat.yaml
+# includes this once per room with the vars i (0-4) and name. Everything on
+# it is filled in by the refresh_r<i> script in src/room/room.yaml.
+#
+#  ┌──────────────────────────────────────────────┐
+#  │ 12:34        Living Room ⧉         ☁ 9.5°   │
+#  │    ╭─────────────╮      ┌──────┐┌──────┐     │
+#  │   ╱   HEATING    ╲     │ 55 % ││ 35 % │     │
+#  │  │     21.5°      │    ├──────┤├──────┤     │
+#  │  │   Room 20.8°   │    │Comfrt││ Eco  │     │
+#  │   ╲   (-)   (+)  ╱     ├──────┤├──────┤     │
+#  │                         │Frost ││Boost │     │
+#  │         • ━ • • •       │ ⏻ Heating on │     │
+#  └──────────────────────────────────────────────┘
+
+id: tile_r${i}
+row: 0
+column: ${i}
+dir: HOR
+widgets:
+  # Room name, with a window icon while a window is open
+  - label:
+      id: r${i}_name_lbl
+      align: TOP_MID
+      y: 6
+      text: "${name}"
+      text_font: font_title
+      text_color: col_text
+  - label:
+      id: r${i}_window_icon
+      align_to: { id: "r${i}_name_lbl", align: OUT_RIGHT_MID, x: 8 }
+      text: "${ic_window}"
+      text_font: font_title
+      text_color: col_warn
+      hidden: true
+
+  # The dial: drag the knob (or tap the ring) to set the target
+  - arc:
+      id: r${i}_arc
+      x: 20
+      y: 34
+      width: 232
+      height: 232
+      adjustable: true
+      start_angle: 135
+      end_angle: 45
+      min_value: 10
+      max_value: 50
+      value: 40
+      arc_width: 14
+      arc_color: col_track
+      arc_rounded: true
+      bg_opa: TRANSP
+      border_width: 0
+      pad_all: 12
+      # Dragging on the ring changes the target, it doesn't swipe the room
+      scroll_chain_hor: false
+      indicator:
+        arc_width: 14
+        arc_color: col_idle
+        arc_rounded: true
+      knob:
+        bg_color: col_idle
+        border_width: 4
+        border_color: col_bg
+        pad_all: 5
+        shadow_width: 0
+        disabled:
+          bg_opa: TRANSP
+          border_opa: TRANSP
+      on_value:
+        - lambda: "id(r${i}_pending) = (int) x;"
+        - script.execute: refresh_r${i}
+      on_release:
+        - if:
+            condition:
+              lambda: "return id(r${i}_pending) != 0;"
+            then:
+              - script.execute: send_target_r${i}
+      # Children of the arc, so they stay centred when their text changes;
+      # the arc only reacts to presses on its ring, not on these.
+      widgets:
+        - label:
+            id: r${i}_status_lbl
+            align: CENTER
+            y: -48
+            text: ""
+            text_font: font_small
+            text_color: col_text2
+            text_letter_space: 1
+        # Target with a small degree sign
+        - obj:
+            align: CENTER
+            y: -2
+            width: SIZE_CONTENT
+            height: SIZE_CONTENT
+            bg_opa: TRANSP
+            border_width: 0
+            pad_all: 0
+            clickable: false
+            scrollable: false
+            layout:
+              type: flex
+              flex_flow: ROW
+              flex_align_cross: START
+              pad_column: 0
+            widgets:
+              - label:
+                  id: r${i}_target_lbl
+                  text: "–"
+                  text_font: font_target
+                  text_color: col_text
+              - label:
+                  id: r${i}_degree_lbl
+                  text: "°"
+                  text_font: font_degree
+                  text_color: col_text2
+                  pad_top: 6
+        - label:
+            id: r${i}_room_lbl
+            align: CENTER
+            y: 38
+            text: ""
+            text_font: font_body
+            text_color: col_text2
+
+  # -/+ in the dial's gap; hold to repeat
+  - button:
+      id: r${i}_minus
+      x: 83
+      y: 215
+      width: 46
+      height: 46
+      radius: 23
+      widgets:
+        - label: { align: CENTER, text: "${ic_minus}", text_font: font_icon }
+      on_short_click:
+        - script.execute: { id: "step_target_r${i}", steps: -1 }
+      on_long_press_repeat:
+        - script.execute: { id: "step_target_r${i}", steps: -1 }
+  - button:
+      id: r${i}_plus
+      x: 143
+      y: 215
+      width: 46
+      height: 46
+      radius: 23
+      widgets:
+        - label: { align: CENTER, text: "${ic_plus}", text_font: font_icon }
+      on_short_click:
+        - script.execute: { id: "step_target_r${i}", steps: 1 }
+      on_long_press_repeat:
+        - script.execute: { id: "step_target_r${i}", steps: 1 }
+
+  # Stat tiles: humidity and valve opening (caption on top, value below)
+  - obj:
+      x: 290
+      y: 40
+      width: 85
+      height: 58
+      styles: st_card
+      scrollable: false
+      widgets:
+        - label: { align: TOP_LEFT, y: -2, text: "${ic_water} Humidity", text_font: font_small, text_color: col_text2 }
+        - label: { id: "r${i}_hum_lbl", align: BOTTOM_LEFT, y: 3, text: "–", text_font: font_value, text_color: col_text }
+  - obj:
+      x: 381
+      y: 40
+      width: 85
+      height: 58
+      styles: st_card
+      scrollable: false
+      widgets:
+        - label: { id: "r${i}_valve_icon", align: TOP_LEFT, y: -2, text: "${ic_valve} Valve", text_font: font_small, text_color: col_text2 }
+        - label: { id: "r${i}_valve_lbl", align: BOTTOM_LEFT, y: 3, text: "–", text_font: font_value, text_color: col_text }
+
+  # Presets (Versatile Thermostat names); the active one is highlighted
+  - button:
+      id: r${i}_p0
+      x: 290
+      y: 104
+      width: 85
+      height: 52
+      styles: st_chip
+      widgets:
+        - label: { align: TOP_MID, text: "${ic_sofa}", text_font: font_icon }
+        - label: { align: BOTTOM_MID, text: "Comfort", text_font: font_small }
+      on_click:
+        - script.execute: { id: "set_preset_r${i}", preset: "comfort" }
+  - button:
+      id: r${i}_p1
+      x: 381
+      y: 104
+      width: 85
+      height: 52
+      styles: st_chip
+      widgets:
+        - label: { align: TOP_MID, text: "${ic_leaf}", text_font: font_icon }
+        - label: { align: BOTTOM_MID, text: "Eco", text_font: font_small }
+      on_click:
+        - script.execute: { id: "set_preset_r${i}", preset: "eco" }
+  - button:
+      id: r${i}_p2
+      x: 290
+      y: 162
+      width: 85
+      height: 52
+      styles: st_chip
+      widgets:
+        - label: { align: TOP_MID, text: "${ic_snowflake}", text_font: font_icon }
+        - label: { align: BOTTOM_MID, text: "Frost", text_font: font_small }
+      on_click:
+        - script.execute: { id: "set_preset_r${i}", preset: "frost" }
+  - button:
+      id: r${i}_p3
+      x: 381
+      y: 162
+      width: 85
+      height: 52
+      styles: st_chip
+      widgets:
+        - label: { align: TOP_MID, text: "${ic_rocket}", text_font: font_icon }
+        - label: { align: BOTTOM_MID, text: "Boost", text_font: font_small }
+      on_click:
+        - script.execute: { id: "set_preset_r${i}", preset: "boost" }
+
+  # Heating on/off for this room
+  - button:
+      id: r${i}_power
+      x: 290
+      y: 220
+      width: 176
+      height: 40
+      styles: st_chip
+      widgets:
+        - label:
+            id: r${i}_power_lbl
+            align: CENTER
+            text: "${ic_power}  Heating off"
+            text_font: font_body
+      on_click:
+        - script.execute: toggle_power_r${i}

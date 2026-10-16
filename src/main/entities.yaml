@@ -1,0 +1,36 @@
+substitutions:
+  # Change these to match your Home Assistant instance before flashing.
+
+  # Rooms, in swipe order: the room the panel hangs in goes first, it is the
+  # one shown after boot and after the screen wakes up.
+  # *_entity: the room's climate entity (Versatile Thermostat, or any climate
+  #   with hvac_mode heat/off and the presets below).
+  # *_window: a door/window contact; binary_sensor.none = no sensor.
+  # Names are shown on the panel: plain letters, digits and spaces.
+  room_0_name: "Living Room"
+  room_0_entity: climate.living_room_radiator
+  room_0_window: binary_sensor.balcony_door_contact
+  room_1_name: "Kitchen"
+  room_1_entity: climate.kitchen_radiator
+  room_1_window: binary_sensor.kitchen_window_contact
+  room_2_name: "Bedroom"
+  room_2_entity: climate.bedroom_radiator
+  room_2_window: binary_sensor.bedroom_window_contact
+  room_3_name: "Arthur"
+  room_3_entity: climate.arthur_radiator
+  room_3_window: binary_sensor.arthur_window_contact
+  room_4_name: "Bathroom"
+  room_4_entity: climate.bathroom_radiator
+  room_4_window: binary_sensor.none
+
+  # Status bar
+  outdoor_temperature_entity: sensor.virtual_outdoor_temperature
+  # Main heating supply (shown as a flame while on); switch.none = hide
+  main_valve_entity: switch.heat_exchanger
+  # Versatile Thermostat central mode; "Stopped" is shown as a warning
+  central_mode_entity: select.central_mode
+
+  # Screen: dim after idle_dim, dark after idle_off (touch wakes it)
+  idle_dim: 60s
+  idle_off: 5min
+  dim_brightness: 20%

@@ -1,0 +1,86 @@
+# Sunton ESP32-4827S043C (also sold as Guition): ESP32-S3-WROOM-1 N4R8
+# (4 MB flash, 8 MB octal PSRAM), 4.3" 480x272 IPS RGB panel (ST7262,
+# 16-bit parallel, no init sequence) and a GT911 capacitive touch controller.
+# Pins from the board schematic as used by rzeldent/platformio-espressif32-sunton.
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 4MB
+  cpu_frequency: 240MHz
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      # Bigger data cache: the panel streams its frame buffer from PSRAM all
+      # the time; with the defaults the picture drifts while Wi-Fi is busy.
+      CONFIG_ESP32S3_DATA_CACHE_64KB: y
+      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: y
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+i2c:
+  - id: touch_i2c
+    sda: GPIO19
+    scl: GPIO20
+    frequency: 400kHz
+
+touchscreen:
+  - platform: gt911
+    id: main_touch
+    i2c_id: touch_i2c
+    display: main_display
+    interrupt_pin: GPIO18
+    reset_pin: GPIO38
+    on_release:
+      # A touch while the screen is dark only wakes it.
+      - if:
+          condition: lvgl.is_paused
+          then:
+            - lvgl.resume:
+            - lvgl.widget.redraw:
+    on_touch:
+      - script.execute: wake_screen
+
+display:
+  - platform: mipi_rgb
+    id: main_display
+    model: RPI           # plain RGB panel, no SPI init sequence
+    dimensions:
+      width: 480
+      height: 272
+    color_order: RGB     # if red and blue look swapped, change to BGR
+    update_interval: never
+    auto_clear_enabled: false
+    pclk_frequency: 8MHz
+    pclk_inverted: true
+    de_pin: GPIO40
+    hsync_pin: GPIO39
+    vsync_pin: GPIO41
+    pclk_pin: GPIO42
+    hsync_pulse_width: 4
+    hsync_back_porch: 43
+    hsync_front_porch: 8
+    vsync_pulse_width: 4
+    vsync_back_porch: 12
+    vsync_front_porch: 8
+    data_pins:
+      red: [GPIO8, GPIO3, GPIO46, GPIO9, GPIO1]
+      green: [GPIO5, GPIO6, GPIO7, GPIO15, GPIO16, GPIO4]
+      blue: [GPIO45, GPIO48, GPIO47, GPIO21, GPIO14]
+
+output:
+  - platform: ledc
+    id: backlight_pwm
+    pin: GPIO2
+    frequency: 20kHz   # no audible whine, no flicker in photos
+
+light:
+  - platform: monochromatic
+    id: backlight
+    name: Backlight
+    icon: mdi:brightness-6
+    output: backlight_pwm
+    restore_mode: ALWAYS_ON
+    default_transition_length: 400ms

@@ -1,0 +1,237 @@
+# One room: what Home Assistant reports about its climate entity, the script
+# that draws it on its tile (src/room/tile.yaml) and the scripts that send
+# changes back. thermostat.yaml includes this once per room with the vars
+#   i       room number 0-4 (prefix of every ID: r<i>_...)
+#   entity  climate entity
+#   window  door/window contact, binary_sensor.none for none
+
+sensor:
+  - platform: homeassistant
+    id: r${i}_target
+    entity_id: ${entity}
+    attribute: temperature
+    internal: true
+    on_value: { script.execute: "refresh_r${i}" }
+  - platform: homeassistant
+    id: r${i}_current
+    entity_id: ${entity}
+    attribute: current_temperature
+    internal: true
+    on_value: { script.execute: "refresh_r${i}" }
+  - platform: homeassistant
+    id: r${i}_humidity
+    entity_id: ${entity}
+    attribute: current_humidity
+    internal: true
+    on_value: { script.execute: "refresh_r${i}" }
+  - platform: homeassistant
+    id: r${i}_valve
+    entity_id: ${entity}
+    attribute: valve_open_percent
+    internal: true
+    on_value: { script.execute: "refresh_r${i}" }
+  # Lowest and highest target the climate entity accepts (the dial's range)
+  - platform: homeassistant
+    id: r${i}_min
+    entity_id: ${entity}
+    attribute: min_temp
+    internal: true
+    on_value: { script.execute: "refresh_r${i}" }
+  - platform: homeassistant
+    id: r${i}_max
+    entity_id: ${entity}
+    attribute: max_temp
+    internal: true
+    on_value: { script.execute: "refresh_r${i}" }
+
+text_sensor:
+  - platform: homeassistant
+    id: r${i}_mode
+    entity_id: ${entity}
+    internal: true
+    on_value: { script.execute: "refresh_r${i}" }
+  - platform: homeassistant
+    id: r${i}_action
+    entity_id: ${entity}
+    attribute: hvac_action
+    internal: true
+    on_value: { script.execute: "refresh_r${i}" }
+  - platform: homeassistant
+    id: r${i}_preset
+    entity_id: ${entity}
+    attribute: preset_mode
+    internal: true
+    on_value: { script.execute: "refresh_r${i}" }
+
+binary_sensor:
+  - platform: homeassistant
+    id: r${i}_window
+    entity_id: ${window}
+    internal: true
+    trigger_on_initial_state: true
+    on_state: { script.execute: "refresh_r${i}" }
+
+globals:
+  # Target the user is setting on the screen, in half degrees; 0 = none.
+  # While set, it wins over what Home Assistant reports, so the dial doesn't
+  # jump back before Home Assistant has caught up.
+  - id: r${i}_pending
+    type: int
+    initial_value: "0"
+
+script:
+  - id: refresh_r${i}
+    mode: queued
+    max_runs: 2
+    then:
+      - lambda: |-
+          const std::string &mode = id(r${i}_mode).state;
+          const bool known = id(r${i}_mode).has_state() && mode != "unavailable" && mode != "unknown" && !mode.empty();
+          const bool on = known && mode != "off";
+          const bool heating = on && id(r${i}_action).state == "heating";
+          const bool window = id(r${i}_window).has_state() && id(r${i}_window).state;
+          const float tgt = id(r${i}_target).state;
+          const float cur = id(r${i}_current).state;
+          const float hum = id(r${i}_humidity).state;
+          const float valve = id(r${i}_valve).state;
+          const std::string &preset = id(r${i}_preset).state;
+
+          // Dial range from the entity (5-25 °C for Versatile Thermostat)
+          int lo = isnan(id(r${i}_min).state) ? 10 : (int) lroundf(id(r${i}_min).state * 2);
+          int hi = isnan(id(r${i}_max).state) ? 60 : (int) lroundf(id(r${i}_max).state * 2);
+          if (hi <= lo) { lo = 10; hi = 60; }
+          lv_arc_set_range(id(r${i}_arc), lo, hi);
+
+          // Home Assistant caught up with the value set on the screen
+          if (id(r${i}_pending) && !isnan(tgt) && lroundf(tgt * 2) == id(r${i}_pending))
+            id(r${i}_pending) = 0;
+          int t2 = id(r${i}_pending) ? id(r${i}_pending) : (isnan(tgt) ? lo : (int) lroundf(tgt * 2));
+          if (t2 < lo) t2 = lo;
+          if (t2 > hi) t2 = hi;
+
+          // Colour of the dial: orange heating, blue on, grey off
+          const uint32_t accent = !on ? 0x${hex_off} : heating ? 0x${hex_heat} : 0x${hex_idle};
+          lv_obj_t *arc = id(r${i}_arc);
+          if (!lv_obj_has_state(arc, LV_STATE_PRESSED)) lv_arc_set_value(arc, t2);
+          lv_obj_set_style_arc_color(arc, lv_color_hex(accent), LV_PART_INDICATOR);
+          lv_obj_set_style_bg_color(arc, lv_color_hex(accent), LV_PART_KNOB);
+          if (on) lv_obj_remove_state(arc, LV_STATE_DISABLED);
+          else lv_obj_add_state(arc, LV_STATE_DISABLED);
+          // -/+ only while on (LVGL's disabled look is a muddy grey)
+          lv_obj_t *steppers[2] = {id(r${i}_minus), id(r${i}_plus)};
+          for (lv_obj_t *b : steppers) {
+            if (on) lv_obj_remove_flag(b, LV_OBJ_FLAG_HIDDEN);
+            else lv_obj_add_flag(b, LV_OBJ_FLAG_HIDDEN);
+          }
+
+          // Target in the middle of the dial
+          char buf[48];
+          if (!known) {
+            lv_label_set_text(id(r${i}_target_lbl), "–");
+            lv_obj_add_flag(id(r${i}_degree_lbl), LV_OBJ_FLAG_HIDDEN);
+          } else if (!on) {
+            lv_label_set_text(id(r${i}_target_lbl), "Off");
+            lv_obj_add_flag(id(r${i}_degree_lbl), LV_OBJ_FLAG_HIDDEN);
+          } else {
+            snprintf(buf, sizeof(buf), "%.1f", t2 / 2.0f);
+            lv_label_set_text(id(r${i}_target_lbl), buf);
+            lv_obj_remove_flag(id(r${i}_degree_lbl), LV_OBJ_FLAG_HIDDEN);
+          }
+          lv_obj_set_style_text_color(id(r${i}_target_lbl), lv_color_hex(on ? 0x${hex_text} : 0x${hex_text2}), 0);
+
+          // Status line above the target
+          uint32_t scol = accent;
+          if (!known) {
+            snprintf(buf, sizeof(buf), "NO DATA");
+          } else if (window) {
+            snprintf(buf, sizeof(buf), "${ic_window} WINDOW OPEN");
+            scol = 0x${hex_warn};
+          } else if (!on) {
+            snprintf(buf, sizeof(buf), "HEATING OFF");
+          } else if (heating) {
+            snprintf(buf, sizeof(buf), "${ic_fire} HEATING");
+          } else if (!isnan(cur) && !isnan(tgt) && cur >= tgt) {
+            snprintf(buf, sizeof(buf), "TARGET REACHED");
+          } else {
+            snprintf(buf, sizeof(buf), "IDLE");
+          }
+          lv_label_set_text(id(r${i}_status_lbl), buf);
+          lv_obj_set_style_text_color(id(r${i}_status_lbl), lv_color_hex(scol), 0);
+
+          // Room temperature under the target
+          if (isnan(cur)) snprintf(buf, sizeof(buf), "Room –");
+          else snprintf(buf, sizeof(buf), "Room %.1f°", cur);
+          lv_label_set_text(id(r${i}_room_lbl), buf);
+
+          // Stat tiles
+          if (isnan(hum)) snprintf(buf, sizeof(buf), "–");
+          else snprintf(buf, sizeof(buf), "%.0f%%", hum);
+          lv_label_set_text(id(r${i}_hum_lbl), buf);
+          if (isnan(valve)) snprintf(buf, sizeof(buf), "–");
+          else snprintf(buf, sizeof(buf), "%.0f%%", valve);
+          lv_label_set_text(id(r${i}_valve_lbl), buf);
+          lv_obj_set_style_text_color(id(r${i}_valve_icon), lv_color_hex(heating ? 0x${hex_heat} : 0x${hex_text2}), 0);
+
+          // Window icon next to the room name
+          if (window) lv_obj_remove_flag(id(r${i}_window_icon), LV_OBJ_FLAG_HIDDEN);
+          else lv_obj_add_flag(id(r${i}_window_icon), LV_OBJ_FLAG_HIDDEN);
+
+          // Presets: the active one is highlighted (only while on)
+          static const char *const PRESETS[4] = {"comfort", "eco", "frost", "boost"};
+          lv_obj_t *chips[4] = {id(r${i}_p0), id(r${i}_p1), id(r${i}_p2), id(r${i}_p3)};
+          for (int k = 0; k < 4; k++) {
+            if (on && preset == PRESETS[k]) lv_obj_add_state(chips[k], LV_STATE_CHECKED);
+            else lv_obj_remove_state(chips[k], LV_STATE_CHECKED);
+          }
+
+          // Power button
+          if (on) lv_obj_add_state(id(r${i}_power), LV_STATE_CHECKED);
+          else lv_obj_remove_state(id(r${i}_power), LV_STATE_CHECKED);
+          lv_label_set_text(id(r${i}_power_lbl), on ? "${ic_power}  Heating on" : "${ic_power}  Heating off");
+
+  # The user changed the target on the screen (r<i>_pending): wait until
+  # they stop tapping, send it, and give Home Assistant a few seconds to
+  # report it back before showing its value again.
+  - id: send_target_r${i}
+    mode: restart
+    then:
+      - delay: 1200ms
+      - homeassistant.action:
+          action: climate.set_temperature
+          data:
+            entity_id: ${entity}
+            temperature: !lambda 'return str_sprintf("%.1f", id(r${i}_pending) / 2.0f);'
+      - delay: 6s
+      - globals.set: { id: "r${i}_pending", value: "0" }
+      - script.execute: refresh_r${i}
+
+  # Step the target by half a degree (+1 / -1) from the +/- buttons
+  - id: step_target_r${i}
+    parameters:
+      steps: int
+    then:
+      - lambda: |-
+          int v = id(r${i}_pending) ? id(r${i}_pending) : lv_arc_get_value(id(r${i}_arc));
+          v += steps;
+          v = std::max<int>(lv_arc_get_min_value(id(r${i}_arc)), std::min<int>(lv_arc_get_max_value(id(r${i}_arc)), v));
+          id(r${i}_pending) = v;
+      - script.execute: refresh_r${i}
+      - script.execute: send_target_r${i}
+
+  - id: set_preset_r${i}
+    parameters:
+      preset: std::string
+    then:
+      - homeassistant.action:
+          action: climate.set_preset_mode
+          data:
+            entity_id: ${entity}
+            preset_mode: !lambda "return preset;"
+
+  - id: toggle_power_r${i}
+    then:
+      - homeassistant.action:
+          action: climate.set_hvac_mode
+          data:
+            entity_id: ${entity}
+            hvac_mode: !lambda 'return id(r${i}_mode).state == "off" ? std::string("heat") : std::string("off");'

@@ -1,0 +1,69 @@
+# Status bar (drawn on LVGL's top layer, src/main/status_widgets.yaml):
+# clock, outdoor temperature, main heating valve, central mode and the
+# Home Assistant connection. Stays put while the rooms are swiped.
+
+globals:
+  - id: ha_connected
+    type: bool
+    initial_value: "false"
+
+time:
+  - platform: homeassistant
+    id: ha_time
+    on_time_sync:
+      - script.execute: refresh_status
+    on_time:
+      - seconds: 0
+        then:
+          - script.execute: refresh_status
+
+sensor:
+  - platform: homeassistant
+    id: outdoor_temp
+    entity_id: ${outdoor_temperature_entity}
+    internal: true
+    on_value: { script.execute: refresh_status }
+
+binary_sensor:
+  - platform: homeassistant
+    id: main_valve
+    entity_id: ${main_valve_entity}
+    internal: true
+    trigger_on_initial_state: true
+    on_state: { script.execute: refresh_status }
+
+text_sensor:
+  - platform: homeassistant
+    id: central_mode
+    entity_id: ${central_mode_entity}
+    internal: true
+    on_value: { script.execute: refresh_status }
+
+script:
+  - id: refresh_status
+    mode: queued
+    max_runs: 2
+    then:
+      - lambda: |-
+          char buf[24];
+          auto now = id(ha_time).now();
+          if (now.is_valid()) lv_label_set_text(id(lbl_clock), now.strftime("%H:%M").c_str());
+
+          if (isnan(id(outdoor_temp).state)) {
+            lv_obj_add_flag(id(lbl_outdoor), LV_OBJ_FLAG_HIDDEN);
+          } else {
+            snprintf(buf, sizeof(buf), "${ic_cloud} %.1f°", id(outdoor_temp).state);
+            lv_label_set_text(id(lbl_outdoor), buf);
+            lv_obj_remove_flag(id(lbl_outdoor), LV_OBJ_FLAG_HIDDEN);
+          }
+
+          const bool flame = id(main_valve).has_state() && id(main_valve).state;
+          if (flame) lv_obj_remove_flag(id(lbl_main_valve), LV_OBJ_FLAG_HIDDEN);
+          else lv_obj_add_flag(id(lbl_main_valve), LV_OBJ_FLAG_HIDDEN);
+
+          const bool stopped = id(central_mode).state == "Stopped";
+          if (stopped) lv_obj_remove_flag(id(lbl_central), LV_OBJ_FLAG_HIDDEN);
+          else lv_obj_add_flag(id(lbl_central), LV_OBJ_FLAG_HIDDEN);
+
+          if (id(ha_connected)) lv_obj_add_flag(id(lbl_offline), LV_OBJ_FLAG_HIDDEN);
+          else lv_obj_remove_flag(id(lbl_offline), LV_OBJ_FLAG_HIDDEN);

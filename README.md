@@ -1,0 +1,143 @@
+# ESP32-S3 Thermostat Panel
+
+[![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Version](https://img.shields.io/badge/version-0.1.0-orange)
+![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
+![LVGL](https://img.shields.io/badge/LVGL-9-green)
+
+A wall thermostat for Home Assistant on a cheap 4.3" ESP32-S3 touch display.
+Every room's heating on one screen: swipe between rooms, drag the dial to set
+the temperature, tap a preset. Built with ESPHome and LVGL; made for
+[Versatile Thermostat](https://github.com/jmcollin78/versatile_thermostat),
+but works with any Home Assistant `climate` entity that heats.
+
+![Living room, heating](docs/images/room-0.png)
+
+## Highlights
+
+- **One tile per room**, swipe left and right; dots at the bottom show where
+  you are. The home room comes first and comes back when the screen wakes.
+- **Big dial**: drag the knob or tap the ring, or use − / + (hold to repeat),
+  in the entity's own steps of 0.5 °C. Sent to Home Assistant when you let
+  go, so the dial never fights you.
+- **Colour tells the state**: orange while the radiator heats, blue when on
+  and idle, grey when off. Status line: *Heating*, *Idle*, *Target reached*,
+  *Window open*.
+- **Presets** Comfort, Eco, Frost, Boost; the active one is highlighted.
+- **Room temperature, humidity and valve opening** for each room.
+- **Status bar**: clock, outdoor temperature, a flame while the main heating
+  supply is on, a warning when the central mode is *Stopped* or Home
+  Assistant isn't connected.
+- **Screen saver**: dims after a minute, goes dark after five. A touch on
+  the dark screen only wakes it, it never presses a button. The backlight is a light entity
+  in Home Assistant, e.g. for a night schedule.
+
+| Heating | Target reached | Window open | Off |
+|---|---|---|---|
+| ![](docs/images/room-0.png) | ![](docs/images/room-1.png) | ![](docs/images/room-2.png) | ![](docs/images/room-3.png) |
+
+## Hardware
+
+| Part | |
+|---|---|
+| Board | Sunton/Guition **ESP32-4827S043C** (the *C* = capacitive touch) |
+| Chip | ESP32-S3-WROOM-1 N4R8: 4 MB flash, 8 MB octal PSRAM |
+| Screen | 4.3" IPS, 480 × 272, 16-bit RGB parallel (ST7262) |
+| Touch | GT911 capacitive, I²C on GPIO19/20, INT 18, RST 38 |
+| Backlight | GPIO2 (PWM) |
+| Power | USB-C, 5 V |
+
+The resistive version (ESP32-4827S043**R**, XPT2046) has the same screen but
+needs a different `touchscreen:` block in `src/main/hardware.yaml`.
+
+## Install
+
+| Step | |
+|---|---|
+| 1 | Copy `secrets.example.yaml` to `secrets.yaml` and fill in Wi-Fi and a new API key (`openssl rand -base64 32`). In Home Assistant's ESPHome app the shared `secrets.yaml` gets `thermostat_api_key`. |
+| 2 | Edit `src/main/entities.yaml`: your rooms (name, climate entity, window contact) and the status bar entities. |
+| 3 | Flash once over USB: `esphome run thermostat.yaml`. After that, over Wi-Fi. |
+| 4 | Home Assistant finds the device; add it with the API key. |
+| 5 | **Allow the device to perform Home Assistant actions** (Settings → Devices → ESPHome → Thermostat Panel → Configure). Without it the panel shows everything but can't change anything. |
+
+### Home Assistant's ESPHome app
+
+Put the project in a folder of its own next to the other configs and point a
+small top-level file at it:
+
+```yaml
+# /homeassistant/esphome/thermostat-panel.yaml
+substitutions:
+  project_dir: ./esp32-s3-thermostat
+packages:
+  panel: !include esp32-s3-thermostat/thermostat.yaml
+```
+
+## Rooms and entities
+
+All of it lives in `src/main/entities.yaml`.
+
+| Setting | Example | |
+|---|---|---|
+| `room_N_name` | `Living Room` | shown on the tile (letters, digits, spaces) |
+| `room_N_entity` | `climate.living_room_radiator` | the room's climate entity |
+| `room_N_window` | `binary_sensor.balcony_door_contact` | window/door contact; `binary_sensor.none` = none |
+| `outdoor_temperature_entity` | `sensor.virtual_outdoor_temperature` | status bar |
+| `main_valve_entity` | `switch.heat_exchanger` | flame in the status bar while on; `switch.none` = never |
+| `central_mode_entity` | `select.central_mode` | warning while *Stopped* |
+| `idle_dim`, `idle_off`, `dim_brightness` | `60s`, `5min`, `20%` | screen saver |
+
+From each climate entity the panel reads its state (`heat`/`off`) and the
+attributes `temperature`, `current_temperature`, `current_humidity`,
+`hvac_action`, `preset_mode`, `min_temp`, `max_temp` and (Versatile
+Thermostat) `valve_open_percent`. It calls `climate.set_temperature`,
+`climate.set_preset_mode` and `climate.set_hvac_mode` (`heat`/`off`).
+
+## Example: a cold morning
+
+The living room is at 20.4 °C, Comfort is 21.5 °C. The tile shows the dial
+in orange with *Heating*, valve 38 %, and the flame in the status bar
+because the main supply is open. Swipe once to the kitchen: blue dial,
+*Target reached*, Eco highlighted. Swipe to the bedroom: the window is open,
+so the status line turns yellow and Versatile Thermostat has dropped the
+target to frost. Tap **+** twice on the kitchen tile: the dial shows 20.0,
+and a second later Home Assistant gets `climate.set_temperature` with 20.0
+(Versatile Thermostat switches the preset to manual).
+
+## Layout
+
+```
+thermostat.yaml            device: Wi-Fi, API, OTA, packages
+src/main/hardware.yaml     board: PSRAM, RGB panel, GT911 touch, backlight
+src/main/entities.yaml     your rooms and entities
+src/main/theme.yaml        colours, fonts, icons
+src/main/ui.yaml           LVGL: theme, tileview, screen saver
+src/main/status.yaml       status bar logic (clock, outdoor, central mode)
+src/main/status_widgets.yaml   status bar and page dots
+src/room/room.yaml         one room: HA values, refresh, actions (×5)
+src/room/tile.yaml         one room's tile (×5)
+demo/screenshot.yaml       the UI on a PC (SDL) with made-up values
+scripts/screenshots.sh     renders docs/images/room-*.png
+```
+
+## Development
+
+- ESPHome **2026.9.1** (`requirements.txt`), the version of Home
+  Assistant's ESPHome app.
+- Check a change: `esphome config thermostat.yaml`, then
+  `esphome compile thermostat.yaml`.
+- See the UI without the board: on Linux with `libsdl2-dev`,
+  `esphome run demo/screenshot.yaml` opens it in a window (mouse = finger);
+  `bash scripts/screenshots.sh` (also needs `xvfb`, `imagemagick`) renders
+  the README images.
+- A room is two include files used five times with `vars` (`i`, `entity`,
+  `window`, `name`); every ID in them starts with `r${i}_`. More rooms: add
+  `room_5_*` substitutions, one more `room_5` package and tile, and the new
+  tile and dot to the two lists in `src/main/ui.yaml` and
+  `src/main/status_widgets.yaml`.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Fonts and icons: see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

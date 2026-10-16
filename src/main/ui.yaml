@@ -1,0 +1,94 @@
+# The LVGL screen: one tileview with a tile per room (src/room/tile.yaml)
+# under a fixed status bar (src/main/status_widgets.yaml), dark theme, and
+# the idle behaviour (dim, then dark; a touch wakes it).
+
+script:
+  - id: wake_screen
+    then:
+      - if:
+          condition:
+            lambda: "return !id(backlight).current_values.is_on() || id(backlight).current_values.get_brightness() < 0.99f;"
+          then:
+            - light.turn_on: { id: backlight, brightness: 100% }
+
+lvgl:
+  displays: [main_display]
+  touchscreens: [main_touch]
+  buffer_size: 25%
+  color_depth: 16
+  bg_color: col_bg
+  default_font: font_body
+  # No default LVGL look: flat dark cards everywhere
+  theme:
+    label:
+      text_color: col_text
+    button:
+      bg_color: col_card
+      bg_opa: COVER
+      text_color: col_text
+      radius: 14
+      border_width: 0
+      shadow_width: 0
+      pad_all: 6
+      pressed:
+        bg_color: col_card_hi
+      checked:
+        bg_color: col_heat_soft
+        text_color: col_heat
+        border_width: 2
+        border_color: col_heat
+  style_definitions:
+    - id: st_card
+      bg_color: col_card
+      bg_opa: COVER
+      radius: 14
+      border_width: 0
+      shadow_width: 0
+      pad_all: 8
+    - id: st_chip
+      radius: 14
+      text_color: col_text2
+
+  on_idle:
+    - timeout: ${idle_dim}
+      then:
+        - light.turn_on: { id: backlight, brightness: "${dim_brightness}" }
+    - timeout: ${idle_off}
+      then:
+        - light.turn_off: backlight
+        # Next time the screen wakes up, it shows the home room
+        - lvgl.tileview.select: { id: tv_rooms, tile_id: tile_r0, animated: false }
+        - lvgl.pause:
+
+  top_layer:
+    widgets: !include status_widgets.yaml
+
+  pages:
+    - id: page_main
+      bg_color: col_bg
+      scrollable: false
+      widgets:
+        - tileview:
+            id: tv_rooms
+            width: 100%
+            height: 100%
+            bg_opa: TRANSP
+            scrollbar_mode: "OFF"
+            # Page dots: the current room's dot is a wide bar. on_value: swiped,
+            # on_update: selected by the idle timeout.
+            on_value: &update_dots
+              - lambda: |-
+                  lv_obj_t *tiles[5] = {id(tile_r0), id(tile_r1), id(tile_r2), id(tile_r3), id(tile_r4)};
+                  lv_obj_t *dots[5] = {id(dot_0), id(dot_1), id(dot_2), id(dot_3), id(dot_4)};
+                  for (int k = 0; k < 5; k++) {
+                    const bool cur = tile == tiles[k];
+                    lv_obj_set_width(dots[k], cur ? 18 : 6);
+                    lv_obj_set_style_bg_color(dots[k], lv_color_hex(cur ? 0x${hex_text} : 0x${hex_off}), 0);
+                  }
+            on_update: *update_dots
+            tiles:
+              - !include { file: ../room/tile.yaml, vars: { i: "0", name: "${room_0_name}" } }
+              - !include { file: ../room/tile.yaml, vars: { i: "1", name: "${room_1_name}" } }
+              - !include { file: ../room/tile.yaml, vars: { i: "2", name: "${room_2_name}" } }
+              - !include { file: ../room/tile.yaml, vars: { i: "3", name: "${room_3_name}" } }
+              - !include { file: ../room/tile.yaml, vars: { i: "4", name: "${room_4_name}" } }

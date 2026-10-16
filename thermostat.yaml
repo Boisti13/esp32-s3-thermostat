@@ -1,0 +1,58 @@
+substitutions:
+  # Folder of this project, relative to the ESPHome config folder. "." when
+  # thermostat.yaml is the main file; Home Assistant's ESPHome app uses a
+  # small top-level file that includes esp32-s3-thermostat/thermostat.yaml and
+  # sets this to ./esp32-s3-thermostat (see README).
+  project_dir: "."
+  device_name: thermostat-panel
+  friendly_name: Thermostat Panel
+
+packages:
+  hardware: !include src/main/hardware.yaml
+  entities: !include src/main/entities.yaml
+  theme: !include src/main/theme.yaml
+  status: !include src/main/status.yaml
+  ui: !include src/main/ui.yaml
+  room_0: !include { file: src/room/room.yaml, vars: { i: "0", entity: "${room_0_entity}", window: "${room_0_window}" } }
+  room_1: !include { file: src/room/room.yaml, vars: { i: "1", entity: "${room_1_entity}", window: "${room_1_window}" } }
+  room_2: !include { file: src/room/room.yaml, vars: { i: "2", entity: "${room_2_entity}", window: "${room_2_window}" } }
+  room_3: !include { file: src/room/room.yaml, vars: { i: "3", entity: "${room_3_entity}", window: "${room_3_window}" } }
+  room_4: !include { file: src/room/room.yaml, vars: { i: "4", entity: "${room_4_entity}", window: "${room_4_window}" } }
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  project:
+    name: "boisti13.esp32-s3-thermostat"
+    version: "0.1.0"
+  on_boot:
+    - priority: -100
+      then:
+        - script.execute: refresh_status
+
+logger:
+  level: INFO
+
+api:
+  encryption:
+    key: !secret thermostat_api_key
+  on_client_connected:
+    - globals.set: { id: ha_connected, value: "true" }
+    - script.execute: refresh_status
+  on_client_disconnected:
+    - globals.set: { id: ha_connected, value: "false" }
+    - script.execute: refresh_status
+
+ota:
+  - platform: esphome
+    # Uploads are encrypted with the API key; no separate OTA password.
+    encryption: {}
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "Thermostat Fallback"
+    password: !secret ap_password
+
+captive_portal:
