@@ -63,7 +63,13 @@ while awake. For OTA, wake it and turn on its *Stay awake* switch.
   included five times with `vars`; every ID in them starts with `r${i}_`.
   Room names and entities only in `src/main/entities.yaml`.
 - Colours only as `hex_*` substitutions in `src/main/theme.yaml` (YAML uses
-  the matching `col_*`, lambdas `lv_color_hex(0x${hex_*})`). Icons as `ic_*`
+  the matching `col_*`, lambdas `lv_color_hex(0x${hex_*})`). The accents
+  (heat, idle) change at run time: lambdas use `id(accent_heat)` /
+  `id(accent_idle)`, and anything else drawn in the accent is recoloured in
+  `apply_scheme` (src/main/settings.yaml). A new scheme goes into
+  `src/main/schemes.h` and the select's options, in the same order.
+- Dark fills look tinted and stair-stepped on this panel: keep the
+  background black, use outlines and bright fills only. Icons as `ic_*`
   substitutions; a new icon must also go into the `glyphs`/`extras` of every
   font that shows it.
 - In YAML flow mappings (`{ ... }`) quote any value containing `${...}`, or

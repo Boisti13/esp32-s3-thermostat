@@ -30,11 +30,12 @@ substitutions:
   # Versatile Thermostat central mode; "Stopped" is shown as a warning
   central_mode_entity: select.central_mode
 
-  # Screen and battery: dim after idle_dim, deep sleep after idle_sleep (a
-  # touch or the BOOT button wakes it). The backlight is most of the power
-  # draw: active_brightness (and its float twin) sets how bright it gets.
-  idle_dim: 15s
-  idle_sleep: 40s
-  dim_brightness: 15%
-  active_brightness: 70%
-  active_brightness_float: "0.7"
+  # Screen: dims after idle_dim_s seconds without a touch, to
+  # dim_brightness_f (0-1). Brightness, "Sleep after" and the colour scheme
+  # are settings (⋯ on the panel, or the entities in Home Assistant); these
+  # are their values on the first boot.
+  idle_dim_s: "15"
+  dim_brightness_f: "0.15"
+  default_brightness: "70"
+  default_sleep: "1 min"
+  default_scheme: "Ember"

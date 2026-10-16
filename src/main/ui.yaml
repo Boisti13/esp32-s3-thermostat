@@ -1,6 +1,6 @@
 # The LVGL screen: one tileview with a tile per room (src/room/tile.yaml)
-# under a fixed status bar (src/main/status_widgets.yaml), dark theme, and
-# the idle behaviour (dim, then dark; a touch wakes it).
+# under a fixed status bar (src/main/status_widgets.yaml), and the settings
+# page (src/main/settings_page.yaml). Dimming and sleep: src/main/settings.yaml.
 
 esphome:
   on_boot:
@@ -16,10 +16,6 @@ globals:
   - id: swipe_done
     type: bool
     initial_value: "false"
-  # active_brightness as a number, for comparisons in lambdas
-  - id: active_brightness_value
-    type: float
-    initial_value: "${active_brightness_float}"
 
 script:
   # Swipe detection from the touch controller's coordinates (called by the
@@ -36,7 +32,7 @@ script:
       y: int
     then:
       - lambda: |-
-          if (id(swipe_done)) return;
+          if (id(swipe_done) || lv_screen_active() != id(page_main)->obj) return;
           const int dx = x - x0, dy = y - y0;
           if (abs(dx) < 50 || abs(dx) < 2 * abs(dy)) return;
           const float rx = x0 - 136, ry = y0 - 150;   // dial centre
@@ -56,13 +52,6 @@ script:
           lv_tileview_set_tile_by_index(tv, next, 0, LV_ANIM_OFF);
           lv_obj_send_event(tv, LV_EVENT_VALUE_CHANGED, nullptr);
 
-  - id: wake_screen
-    then:
-      - if:
-          condition:
-            lambda: "return !id(backlight).current_values.is_on() || id(backlight).current_values.get_brightness() < id(active_brightness_value) - 0.01f;"
-          then:
-            - light.turn_on: { id: backlight, brightness: "${active_brightness}" }
 
 lvgl:
   displays: [main_display]
@@ -97,15 +86,6 @@ lvgl:
   style_definitions:
     - id: st_chip
       text_color: col_text2
-
-  on_idle:
-    - timeout: ${idle_dim}
-      then:
-        - light.turn_on: { id: backlight, brightness: "${dim_brightness}" }
-    # Deep sleep on the board, dark screen on the PC demo (idle_sleep script)
-    - timeout: ${idle_sleep}
-      then:
-        - script.execute: idle_sleep
 
   top_layer:
     widgets: !include status_widgets.yaml
@@ -143,3 +123,4 @@ lvgl:
               - !include { file: ../room/tile.yaml, vars: { i: "2", name: "${room_2_name}" } }
               - !include { file: ../room/tile.yaml, vars: { i: "3", name: "${room_3_name}" } }
               - !include { file: ../room/tile.yaml, vars: { i: "4", name: "${room_4_name}" } }
+    - !include settings_page.yaml

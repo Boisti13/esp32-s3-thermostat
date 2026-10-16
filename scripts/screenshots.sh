@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Render the UI without the board: builds demo/screenshot.yaml for the PC
 # (ESPHome host platform + SDL), runs it in a virtual X display and saves one
-# PNG per room to docs/images/room-<n>.png.
+# PNG per room to docs/images/room-<n>.png, plus the settings page and
+# one other colour scheme.
 #
 # Linux only. Needs ESPHome (requirements.txt), libsdl2-dev, xvfb, imagemagick.
 #   bash scripts/screenshots.sh
@@ -21,8 +22,8 @@ app=$!
 # The demo moves to the next room every 3 s after boot; shoot mid-way.
 mkdir -p docs/images
 sleep 1.5
-for n in 0 1 2 3 4; do
-  DISPLAY=:97 import -window root "docs/images/room-$n.png"
+for name in room-0 room-1 room-2 room-3 room-4 settings scheme-ocean; do
+  DISPLAY=:97 import -window root "docs/images/$name.png"
   sleep 3
 done
-echo "saved docs/images/room-{0..4}.png"
+echo "saved docs/images/room-{0..4}.png, settings.png, scheme-ocean.png"

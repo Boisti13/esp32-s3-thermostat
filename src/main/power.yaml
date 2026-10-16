@@ -1,7 +1,7 @@
 # Battery operation. The backlight is most of the draw, and Wi-Fi the rest,
 # so nothing is gained by staying half-awake. Instead:
-# dim after idle_dim, then deep sleep after idle_sleep with the backlight
-# held off. A touch (GT911 INT on GPIO3) or the
+# dim after a few seconds, then deep sleep after "Sleep after" (a setting)
+# with the backlight held off. A touch (GT911 INT on GPIO3) or the
 # BOOT button wakes it; it boots straight into the last known values (kept
 # in RTC memory) and updates them once Home Assistant is connected.
 # The "Stay awake" switch keeps it awake (for OTA updates, or on USB power).
@@ -77,7 +77,7 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
 
 script:
-  # Called by LVGL's on_idle after idle_sleep (src/main/ui.yaml)
+  # Called after "Sleep after" without a touch (src/main/settings.yaml)
   - id: idle_sleep
     mode: single
     then:
@@ -86,7 +86,9 @@ script:
             switch.is_on: stay_awake
           then:
             # Awake on purpose: just darken the screen; a touch brings it back
+            - globals.set: { id: dimmed, value: "true" }
             - light.turn_off: backlight
+            - script.execute: show_rooms
             - lvgl.tileview.select: { id: tv_rooms, tile_id: tile_r0, animated: false }
             - lvgl.pause:
           else:

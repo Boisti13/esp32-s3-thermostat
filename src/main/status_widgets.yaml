@@ -1,6 +1,19 @@
 # Widgets on LVGL's top layer (above every room tile), filled in by the
 # refresh_status script in src/main/status.yaml and the tileview's on_value.
 
+# ⋯ top left: the settings page (hidden while it is open)
+- button:
+    id: btn_menu
+    x: 4
+    y: 2
+    width: 40
+    height: 34
+    border_width: 0
+    widgets:
+      - label: { align: CENTER, text: "${ic_menu}", text_font: font_icon, text_color: col_text2 }
+    on_click:
+      - script.execute: show_settings
+
 # Top right, icons only so it never runs into the room name on the left:
 # [central stopped] [no connection] [flame] [battery] [outdoor] [clock]
 - obj:
@@ -57,6 +70,7 @@
 
 # Page dots, one per room
 - obj:
+    id: dots_row
     align: TOP_MID
     x: -104
     y: 263

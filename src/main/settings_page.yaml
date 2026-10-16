@@ -1,0 +1,154 @@
+# The settings page (opened with ⋯ top left, closed with ‹). Controls set
+# the entities in src/main/settings.yaml, which redraw everything.
+#
+#  ┌──────────────────────────────────────────────┐
+#  │ ‹ Settings                     ☁ 9.5°  17:07 │
+#  │ Colour  Ember                                │
+#  │ (●) (●) (●) (●) (●) (●)                      │
+#  │ Brightness                              70%  │
+#  │ ━━━━━━━━━━━━━━━━━━━━━━━━━●─────────────      │
+#  │ Sleep after                                  │
+#  │ [ 30 s ] [ 1 min ] [ 5 min ] [ Never ]       │
+#  │ v0.5.0   192.168.178.140   Wi-Fi -58 dBm     │
+#  └──────────────────────────────────────────────┘
+
+id: page_settings
+bg_color: col_bg
+scrollable: false
+widgets:
+  - button:
+      id: set_back
+      x: 4
+      y: 2
+      width: 40
+      height: 34
+      border_width: 0
+      widgets:
+        - label: { align: CENTER, text: "${ic_back}", text_font: font_icon, text_color: col_text }
+      on_click:
+        - script.execute: show_rooms
+  - label:
+      x: 46
+      y: 6
+      text: "Settings"
+      text_font: font_title
+      text_color: col_text
+
+  # Colour scheme
+  - label: { x: 14, y: 46, text: "Colour", text_font: font_small, text_color: col_text2 }
+  - label: { id: set_scheme_lbl, x: 66, y: 46, text: "", text_font: font_small, text_color: col_text }
+  - button: &swatch
+      id: set_scheme_0
+      x: 14
+      y: 66
+      width: 40
+      height: 40
+      radius: 20
+      bg_opa: COVER
+      border_width: 0
+      checked:
+        border_width: 3
+        border_color: col_text
+      on_click:
+        - select.set_index: { id: color_scheme, index: 0 }
+  - button:
+      <<: *swatch
+      id: set_scheme_1
+      x: 66
+      on_click:
+        - select.set_index: { id: color_scheme, index: 1 }
+  - button:
+      <<: *swatch
+      id: set_scheme_2
+      x: 118
+      on_click:
+        - select.set_index: { id: color_scheme, index: 2 }
+  - button:
+      <<: *swatch
+      id: set_scheme_3
+      x: 170
+      on_click:
+        - select.set_index: { id: color_scheme, index: 3 }
+  - button:
+      <<: *swatch
+      id: set_scheme_4
+      x: 222
+      on_click:
+        - select.set_index: { id: color_scheme, index: 4 }
+  - button:
+      <<: *swatch
+      id: set_scheme_5
+      x: 274
+      on_click:
+        - select.set_index: { id: color_scheme, index: 5 }
+
+  # Brightness (while in use; dimmed after a few seconds without a touch)
+  - label: { x: 14, y: 118, text: "Brightness", text_font: font_small, text_color: col_text2 }
+  - label: { id: set_brightness_lbl, align: TOP_RIGHT, x: -14, y: 118, text: "", text_font: font_small, text_color: col_text }
+  - slider:
+      id: set_brightness_slider
+      x: 24
+      y: 142
+      width: 432
+      height: 8
+      min_value: 10
+      max_value: 100
+      value: 70
+      bg_color: col_track
+      bg_opa: COVER
+      radius: 4
+      indicator:
+        bg_color: col_heat
+        radius: 4
+      knob:
+        bg_color: col_text
+        pad_all: 6
+        radius: 10
+      on_value:
+        - lambda: |-
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%d%%", (int) x);
+            lv_label_set_text(id(set_brightness_lbl), buf);
+      on_release:
+        - number.set:
+            id: brightness_setting
+            value: !lambda "return lv_slider_get_value(id(set_brightness_slider));"
+
+  # Sleep after (deep sleep on battery; Never = stays on, dimmed)
+  - label: { x: 14, y: 168, text: "Sleep after", text_font: font_small, text_color: col_text2 }
+  - button: &sleep_btn
+      id: set_sleep_0
+      x: 14
+      y: 188
+      width: 105
+      height: 38
+      widgets:
+        - label: { align: CENTER, text: "30 s", text_font: font_body }
+      on_click:
+        - select.set_index: { id: sleep_after, index: 0 }
+  - button:
+      <<: *sleep_btn
+      id: set_sleep_1
+      x: 128
+      widgets:
+        - label: { align: CENTER, text: "1 min", text_font: font_body }
+      on_click:
+        - select.set_index: { id: sleep_after, index: 1 }
+  - button:
+      <<: *sleep_btn
+      id: set_sleep_2
+      x: 242
+      widgets:
+        - label: { align: CENTER, text: "5 min", text_font: font_body }
+      on_click:
+        - select.set_index: { id: sleep_after, index: 2 }
+  - button:
+      <<: *sleep_btn
+      id: set_sleep_3
+      x: 356
+      widgets:
+        - label: { align: CENTER, text: "Never", text_font: font_body }
+      on_click:
+        - select.set_index: { id: sleep_after, index: 3 }
+
+  - label: { id: set_info_lbl, x: 14, y: 246, text: "", text_font: font_small, text_color: col_text2 }

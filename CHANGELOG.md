@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.5.0 — 2026-10-16
+
+### Added
+
+- Settings page, opened with ⋯ top left: colour scheme (Ember, Amber, Rose,
+  Forest, Ocean, Mono), brightness slider, *Sleep after* (30 s, 1 min,
+  5 min, Never) and an info line (version, IP, Wi-Fi signal).
+- The three settings are Home Assistant entities too and survive reboots
+  and deep sleep.
+
+### Changed
+
+- Deep sleep after 1 min by default (was 40 s), or as set.
+- Room names start right of the ⋯ button.
+- `entities.yaml`: `idle_dim`, `idle_sleep`, `dim_brightness`,
+  `active_brightness(_float)` are replaced by `idle_dim_s`,
+  `dim_brightness_f` and the `default_*` first-boot values.
+
 ## v0.4.0 — 2026-10-16
 
 ### Changed

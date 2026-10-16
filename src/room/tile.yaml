@@ -19,10 +19,11 @@ row: 0
 column: ${i}
 dir: HOR
 widgets:
-  # Room name, top left (clock and status icons are top right)
+  # Room name, top left after the ⋯ settings button (clock and status
+  # icons are top right)
   - label:
       id: r${i}_name_lbl
-      x: 14
+      x: 48
       y: 6
       text: "${name}"
       text_font: font_title

@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.4.0-orange)
+![Version](https://img.shields.io/badge/version-0.5.0-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -36,8 +36,11 @@ but works with any Home Assistant `climate` entity that heats.
   temperature, a flame while the main heating supply is on, and warning
   icons when the central mode is *Stopped* or Home Assistant isn't
   connected.
-- **Runs on a battery**: dims after 15 s, deep-sleeps after 40 s with the
-  backlight held off. A touch or the BOOT button wakes it, and it shows the
+- **Settings page** (⋯ top left): six colour schemes (Ember, Amber, Rose,
+  Forest, Ocean, Mono), brightness, and *Sleep after* (30 s, 1 min, 5 min,
+  Never). They are kept in flash and are also entities in Home Assistant.
+- **Runs on a battery**: dims after 15 s, deep-sleeps after *Sleep after*
+  (1 min by default) with the backlight held off. A touch or the BOOT button wakes it, and it shows the
   last known values at once (kept in RTC memory) while it reconnects. A
   *Stay awake* switch in Home Assistant keeps it on for updates or on USB.
 - **Battery level** in the status bar and Home Assistant (optional, needs
@@ -46,6 +49,10 @@ but works with any Home Assistant `climate` entity that heats.
 | Heating | Target reached | Window open | Off |
 |---|---|---|---|
 | ![](docs/images/room-0.png) | ![](docs/images/room-1.png) | ![](docs/images/room-2.png) | ![](docs/images/room-3.png) |
+
+| Settings | Ocean scheme |
+|---|---|
+| ![](docs/images/settings.png) | ![](docs/images/scheme-ocean.png) |
 
 ## Hardware
 
@@ -96,8 +103,8 @@ awake (screen on) or in deep sleep (screen off).
 | State | What runs | Rough draw |
 |---|---|---|
 | Awake | CPU, Wi-Fi, panel, backlight at 70 % | 150–250 mA |
-| Dimmed (after `idle_dim`) | same, backlight 15 % | ~100 mA |
-| Deep sleep (after `idle_sleep`) | ESP32 off, touch controller on | board-dependent, see below |
+| Dimmed (after `idle_dim_s`) | same, backlight 15 % | ~100 mA |
+| Deep sleep (after *Sleep after*) | ESP32 off, touch controller on | board-dependent, see below |
 
 - **Wake-up**: a touch (GT911 INT on GPIO3) or the BOOT button. After a wake the screen is up in about a
   second with the last values; live data follows in 2–4 s (Wi-Fi with
@@ -111,8 +118,9 @@ awake (screen on) or in deep sleep (screen off).
   per charge.
 - **Stay awake** (switch in Home Assistant): no deep sleep, just a dark
   screen. Turn it on before an OTA update; the device can only be reached
-  while awake, so wake it with a touch first.
-- Make it last longer: lower `active_brightness`, shorter `idle_sleep`.
+  while awake, so wake it with a touch first. *Sleep after: Never* keeps it
+  on (dimmed), for USB power.
+- Make it last longer: lower *Brightness*, shorter *Sleep after*.
 
 ### Battery level
 
@@ -138,8 +146,11 @@ All of it lives in `src/main/entities.yaml`.
 | `outdoor_temperature_entity` | `sensor.virtual_outdoor_temperature` | status bar |
 | `main_valve_entity` | `switch.heat_exchanger` | flame in the status bar while on; `switch.none` = never |
 | `central_mode_entity` | `select.central_mode` | warning while *Stopped* |
-| `idle_dim`, `idle_sleep` | `15s`, `40s` | dim, then deep sleep |
-| `dim_brightness`, `active_brightness` | `15%`, `70%` | backlight; `active_brightness_float` must match |
+| `idle_dim_s`, `dim_brightness_f` | `15`, `0.15` | dim after 15 s to 15 % |
+| `default_brightness`, `default_sleep`, `default_scheme` | `70`, `1 min`, `Ember` | first-boot values of the settings |
+
+The settings themselves are entities: *Colour scheme* and *Sleep after*
+(select), *Brightness* (number), next to *Stay awake* and *Backlight*.
 
 From each climate entity the panel reads its state (`heat`/`off`) and the
 attributes `temperature`, `current_temperature`, `current_humidity`,
@@ -168,13 +179,16 @@ src/main/theme.yaml        colours, fonts, icons
 src/main/ui.yaml           LVGL: theme, tileview, screen saver
 src/main/status.yaml       status bar logic (clock, outdoor, central mode)
 src/main/status_widgets.yaml   status bar and page dots
+src/main/settings.yaml     settings entities, colour schemes, dim/sleep timing
+src/main/settings_page.yaml    the settings page
+src/main/schemes.h         the colour schemes
 src/main/power.yaml        deep sleep, wake pins, RTC value cache, Stay awake
 src/main/rtc_cache.h       the cache's layout
 src/main/battery.yaml      optional battery level (needs the mod)
 src/room/room.yaml         one room: HA values, refresh, actions (×5)
 src/room/tile.yaml         one room's tile (×5)
 demo/screenshot.yaml       the UI on a PC (SDL) with made-up values
-scripts/screenshots.sh     renders docs/images/room-*.png
+scripts/screenshots.sh     renders docs/images/*.png
 ```
 
 ## Development

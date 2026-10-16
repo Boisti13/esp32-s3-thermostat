@@ -32,6 +32,8 @@ substitutions:
   ic_valve: "\U000F1066"
   ic_cloud: "\U000F0595"
   ic_stop: "\U000F0AD8"   # radiator-off
+  ic_menu: "\U000F01D8"   # dots-horizontal
+  ic_back: "\U000F0141"   # chevron-left
   ic_offline: "\U000F0319"
   ic_battery: "\U000F0079"
   ic_battery_50: "\U000F007E"
@@ -105,4 +107,4 @@ font:
     size: 24
     bpp: 4
     glyphs: ["${ic_sofa}", "${ic_leaf}", "${ic_snowflake}", "${ic_rocket}", "${ic_power}",
-             "${ic_plus}", "${ic_minus}"]
+             "${ic_plus}", "${ic_minus}", "${ic_menu}", "${ic_back}"]

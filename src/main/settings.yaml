@@ -1,0 +1,213 @@
+# Settings: colour scheme, brightness and "Sleep after". Each is an entity
+# (select/number, kept in flash, also in Home Assistant) and has a control
+# on the settings page (src/main/settings_page.yaml), opened with the ⋯
+# button top left. Also: when the screen dims and when it goes to sleep.
+
+esphome:
+  includes:
+    - ${project_dir}/src/main/schemes.h
+  on_boot:
+    - priority: -100
+      then:
+        - globals.set: { id: ui_ready, value: "true" }
+        - script.execute: apply_scheme
+        - script.execute: wake_screen
+
+globals:
+  # LVGL widgets exist (the settings restore before LVGL is set up)
+  - id: ui_ready
+    type: bool
+    initial_value: "false"
+  # Backlight is at dim_brightness after idle_dim_s without a touch
+  - id: dimmed
+    type: bool
+    initial_value: "false"
+  # Current scheme's accents (src/main/schemes.h), used by the room refresh
+  - id: accent_heat
+    type: uint32_t
+    initial_value: "0x${hex_heat}"
+  - id: accent_idle
+    type: uint32_t
+    initial_value: "0x${hex_idle}"
+
+select:
+  - platform: template
+    id: color_scheme
+    name: Colour scheme
+    icon: mdi:palette
+    entity_category: config
+    # Same order as PANEL_SCHEMES in src/main/schemes.h
+    options: [Ember, Amber, Rose, Forest, Ocean, Mono]
+    initial_option: ${default_scheme}
+    optimistic: true
+    restore_value: true
+    on_value:
+      - if:
+          condition:
+            lambda: "return id(ui_ready);"
+          then:
+            - script.execute: apply_scheme
+
+  - platform: template
+    id: sleep_after
+    name: Sleep after
+    icon: mdi:sleep
+    entity_category: config
+    # "Never": no deep sleep, the screen stays dimmed (e.g. on USB power)
+    options: ["30 s", "1 min", "5 min", "Never"]
+    initial_option: ${default_sleep}
+    optimistic: true
+    restore_value: true
+    on_value:
+      - if:
+          condition:
+            lambda: "return id(ui_ready);"
+          then:
+            - script.execute: refresh_settings
+
+number:
+  - platform: template
+    id: brightness_setting
+    name: Brightness
+    icon: mdi:brightness-6
+    entity_category: config
+    unit_of_measurement: "%"
+    min_value: 10
+    max_value: 100
+    step: 5
+    initial_value: ${default_brightness}
+    optimistic: true
+    restore_value: true
+    on_value:
+      - if:
+          condition:
+            lambda: "return id(ui_ready) && !id(dimmed);"
+          then:
+            - light.turn_on:
+                id: backlight
+                brightness: !lambda "return x / 100.0f;"
+      - if:
+          condition:
+            lambda: "return id(ui_ready);"
+          then:
+            - script.execute: refresh_settings
+
+# Dim, then sleep (idle_sleep: deep sleep on the board, src/main/power.yaml)
+interval:
+  - interval: 1s
+    then:
+      - lambda: |-
+          if (!id(ui_ready) || !id(backlight).current_values.is_on()) return;
+          const uint32_t idle = lv_display_get_inactive_time(nullptr);
+          if (!id(dimmed) && idle >= ${idle_dim_s} * 1000) {
+            id(dimmed) = true;
+            auto call = id(backlight).turn_on();
+            call.set_brightness(std::min(${dim_brightness_f}f, id(brightness_setting).state / 100.0f));
+            call.perform();
+          }
+          static const uint32_t SLEEP_MS[] = {30000, 60000, 300000, 0};
+          auto sel = id(sleep_after).active_index();
+          const uint32_t ms = sel.has_value() && *sel < 4 ? SLEEP_MS[*sel] : 60000;
+          if (ms && idle >= ms) id(idle_sleep).execute();
+
+script:
+  # Back to full brightness on a touch
+  - id: wake_screen
+    then:
+      - lambda: |-
+          if (!id(ui_ready)) return;
+          if (!id(dimmed) && id(backlight).current_values.is_on()) return;
+          id(dimmed) = false;
+          auto call = id(backlight).turn_on();
+          call.set_brightness(id(brightness_setting).state / 100.0f);
+          call.perform();
+
+  # Recolour everything that uses the accent, then redraw the rooms
+  - id: apply_scheme
+    then:
+      - lambda: |-
+          auto sel = id(color_scheme).active_index();
+          const int k = sel.has_value() && (int) *sel < PANEL_SCHEME_COUNT ? (int) *sel : 0;
+          const PanelScheme &s = PANEL_SCHEMES[k];
+          id(accent_heat) = s.heat;
+          id(accent_idle) = s.idle;
+          const lv_color_t heat = lv_color_hex(s.heat);
+          lv_obj_t *btns[] = {
+            id(r0_p0), id(r0_p1), id(r0_p2), id(r0_p3), id(r0_power),
+            id(r1_p0), id(r1_p1), id(r1_p2), id(r1_p3), id(r1_power),
+            id(r2_p0), id(r2_p1), id(r2_p2), id(r2_p3), id(r2_power),
+            id(r3_p0), id(r3_p1), id(r3_p2), id(r3_p3), id(r3_power),
+            id(r4_p0), id(r4_p1), id(r4_p2), id(r4_p3), id(r4_power),
+            id(set_sleep_0), id(set_sleep_1), id(set_sleep_2), id(set_sleep_3),
+          };
+          for (lv_obj_t *b : btns) {
+            lv_obj_set_style_bg_color(b, heat, LV_PART_MAIN | LV_STATE_CHECKED);
+            lv_obj_set_style_border_color(b, heat, LV_PART_MAIN | LV_STATE_CHECKED);
+          }
+          lv_obj_set_style_text_color(id(lbl_main_valve), heat, 0);
+          lv_obj_set_style_bg_color(id(set_brightness_slider), heat, LV_PART_INDICATOR);
+          // Swatches show their own scheme; the current one gets a ring
+          lv_obj_t *sw[] = {id(set_scheme_0), id(set_scheme_1), id(set_scheme_2),
+                            id(set_scheme_3), id(set_scheme_4), id(set_scheme_5)};
+          for (int n = 0; n < 6 && n < PANEL_SCHEME_COUNT; n++) {
+            const lv_color_t c = lv_color_hex(PANEL_SCHEMES[n].heat);
+            lv_obj_set_style_bg_color(sw[n], c, LV_PART_MAIN);
+            lv_obj_set_style_bg_color(sw[n], c, LV_PART_MAIN | LV_STATE_CHECKED);
+            lv_obj_set_style_bg_color(sw[n], c, LV_PART_MAIN | LV_STATE_PRESSED);
+            if (n == k) lv_obj_add_state(sw[n], LV_STATE_CHECKED);
+            else lv_obj_remove_state(sw[n], LV_STATE_CHECKED);
+          }
+          lv_label_set_text(id(set_scheme_lbl), s.name);
+      - script.execute: refresh_r0
+      - script.execute: refresh_r1
+      - script.execute: refresh_r2
+      - script.execute: refresh_r3
+      - script.execute: refresh_r4
+      - script.execute: refresh_settings
+
+  # Settings page controls from the current settings
+  - id: refresh_settings
+    then:
+      - lambda: |-
+          char buf[64];
+          const int b = (int) id(brightness_setting).state;
+          if (!lv_obj_has_state(id(set_brightness_slider), LV_STATE_PRESSED))
+            lv_slider_set_value(id(set_brightness_slider), b, LV_ANIM_OFF);
+          snprintf(buf, sizeof(buf), "%d%%", b);
+          lv_label_set_text(id(set_brightness_lbl), buf);
+          auto sel = id(sleep_after).active_index();
+          lv_obj_t *sl[] = {id(set_sleep_0), id(set_sleep_1), id(set_sleep_2), id(set_sleep_3)};
+          for (int n = 0; n < 4; n++) {
+            if (sel.has_value() && (int) *sel == n) lv_obj_add_state(sl[n], LV_STATE_CHECKED);
+            else lv_obj_remove_state(sl[n], LV_STATE_CHECKED);
+          }
+          // Info line: version, address, signal
+          std::string info;
+          #ifdef ESPHOME_PROJECT_VERSION
+          info += "v" ESPHOME_PROJECT_VERSION;
+          #endif
+          #ifdef USE_WIFI
+          if (wifi::global_wifi_component != nullptr && wifi::global_wifi_component->is_connected()) {
+            auto ips = wifi::global_wifi_component->get_ip_addresses();
+            char ip[network::IP_ADDRESS_BUFFER_SIZE];
+            if (!ips.empty() && ips[0].is_set()) info += std::string("   ") + ips[0].str_to(ip);
+            snprintf(buf, sizeof(buf), "   Wi-Fi %d dBm", (int) wifi::global_wifi_component->wifi_rssi());
+            info += buf;
+          }
+          #endif
+          lv_label_set_text(id(set_info_lbl), info.c_str());
+
+  - id: show_settings
+    then:
+      - lvgl.widget.hide: [btn_menu, dots_row]
+      - lvgl.page.show:
+          id: page_settings
+          animation: NONE
+      - script.execute: refresh_settings
+
+  - id: show_rooms
+    then:
+      - lvgl.page.show:
+          id: page_main
+          animation: NONE
+      - lvgl.widget.show: [btn_menu, dots_row]
