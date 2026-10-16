@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.2.0-orange)
+![Version](https://img.shields.io/badge/version-0.2.1-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -166,6 +166,11 @@ src/room/tile.yaml         one room's tile (×5)
 demo/screenshot.yaml       the UI on a PC (SDL) with made-up values
 scripts/screenshots.sh     renders docs/images/room-*.png
 ```
+
+The board's display is configured as 480 × **280**: ESP-IDF's RGB driver
+needs the frame to be a multiple of ESPHome's 10-row bounce buffer, which
+272 isn't. The extra 8 rows fall off the bottom of the glass, so nothing in
+the UI goes below y 272. Touch is calibrated 1:1 to match.
 
 ## Development
 

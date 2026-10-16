@@ -47,6 +47,11 @@ esphome:
             if (panel_cache.central[0]) id(central_mode).publish_state(panel_cache.central);
         - script.execute: refresh_status
 
+# Each wake is a reboot that lasts under a minute; with the default
+# (boot_is_good_after: 1min) ten sleep cycles would put it in safe mode.
+safe_mode:
+  boot_is_good_after: 10s
+
 deep_sleep:
   id: sleep_ctl
   # Woken only by these; no timed wake-ups

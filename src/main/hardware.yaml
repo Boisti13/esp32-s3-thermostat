@@ -34,6 +34,12 @@ touchscreen:
     # Polled: INT (GPIO18) is only connected on some boards; where it is,
     # src/main/power.yaml uses it to wake from deep sleep on a touch.
     reset_pin: GPIO38
+    # Touch coordinates 1:1 (the display is 280 high, the glass 272)
+    calibration:
+      x_min: 0
+      x_max: 480
+      y_min: 0
+      y_max: 280
     on_release:
       # A touch while the screen is dark only wakes it.
       - if:
@@ -48,9 +54,13 @@ display:
   - platform: mipi_rgb
     id: main_display
     model: RPI           # plain RGB panel, no SPI init sequence
+    # The glass has 272 rows, but the driver refuses 272: ESP-IDF needs the
+    # frame to be a multiple of its bounce buffer (10 rows), "lcd setup
+    # failed". 280 rows are sent; the last 8 fall off the bottom of the
+    # panel, and the UI stays within the top 272 (see README → Layout).
     dimensions:
       width: 480
-      height: 272
+      height: 280
     color_order: RGB     # if red and blue look swapped, change to BGR
     update_interval: never
     auto_clear_enabled: false

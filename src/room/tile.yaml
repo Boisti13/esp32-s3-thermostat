@@ -225,7 +225,8 @@ widgets:
       on_click:
         - script.execute: { id: "set_preset_r${i}", preset: "boost" }
 
-  # Heating on/off for this room
+  # Heating on/off for this room (keep everything above y 272: the board's
+  # display is 280 rows, the last 8 aren't visible)
   - button:
       id: r${i}_power
       x: 290

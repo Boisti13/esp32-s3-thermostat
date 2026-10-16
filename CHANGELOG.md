@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.1 — 2026-10-16
+
+### Fixed
+
+- Screen stayed dark: the panel driver failed to start ("lcd setup failed")
+  because 272 rows aren't a multiple of the driver's 10-row bounce buffer.
+  The display now runs as 480 × 280 (the last 8 rows are off the glass).
+- Deep-sleep wake-ups counted as failed boots and would have put the panel
+  into safe mode after ten sleep cycles (`boot_is_good_after: 10s`).
+
 ## v0.2.0 — 2026-10-16
 
 ### Added
