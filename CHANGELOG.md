@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.2 — 2026-10-16
+
+### Fixed
+
+- The header sometimes said "no connection" while Home Assistant was
+  connected: any API client leaving (the ESPHome app's dashboard or log
+  viewer) counted as Home Assistant leaving. Now it shows whether a client
+  is subscribed to the panel's states, which only Home Assistant is.
+
 ## v1.0.1 — 2026-10-16
 
 ### Changed

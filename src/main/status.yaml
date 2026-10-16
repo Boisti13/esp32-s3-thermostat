@@ -3,9 +3,30 @@
 # Home Assistant connection. Stays put while the rooms are swiped.
 
 globals:
+  # Home Assistant connection as last shown (the PC demo forces it on)
   - id: ha_connected
     type: bool
     initial_value: "false"
+  - id: force_connected
+    type: bool
+    initial_value: "false"
+
+# Connected = a client has subscribed to the panel's states, which only Home
+# Assistant does. Other API clients (the ESPHome app's dashboard and logs)
+# come and go without saying anything about Home Assistant.
+interval:
+  - interval: 2s
+    then:
+      - lambda: |-
+          bool connected = id(force_connected);
+          #ifdef USE_API
+          if (api::global_api_server != nullptr && api::global_api_server->is_connected_with_state_subscription())
+            connected = true;
+          #endif
+          if (connected == id(ha_connected)) return;
+          id(ha_connected) = connected;
+          if (connected) lv_obj_add_flag(id(lbl_offline), LV_OBJ_FLAG_HIDDEN);
+          else lv_obj_remove_flag(id(lbl_offline), LV_OBJ_FLAG_HIDDEN);
 
 time:
   - platform: homeassistant

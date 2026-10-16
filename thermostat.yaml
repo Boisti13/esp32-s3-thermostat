@@ -26,7 +26,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "boisti13.esp32-s3-thermostat"
-    version: "1.0.1"
+    version: "1.0.2"
   on_boot:
     - priority: -100
       then:
@@ -38,12 +38,6 @@ logger:
 api:
   encryption:
     key: !secret thermostat_api_key
-  on_client_connected:
-    - globals.set: { id: ha_connected, value: "true" }
-    - script.execute: refresh_status
-  on_client_disconnected:
-    - globals.set: { id: ha_connected, value: "false" }
-    - script.execute: refresh_status
 
 ota:
   - platform: esphome

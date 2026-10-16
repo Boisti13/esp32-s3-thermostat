@@ -58,7 +58,7 @@ esphome:
             id(outdoor_temp).publish_state(9.5);
             id(main_valve).publish_state(true);
             id(central_mode).publish_state("Heat only");
-            id(ha_connected) = true;
+            id(force_connected) = true;
         - script.execute: refresh_status
 
 host:
