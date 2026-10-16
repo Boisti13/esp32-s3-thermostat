@@ -1,0 +1,136 @@
+# Battery operation. The RGB panel has no memory of its own (the ESP32
+# streams every frame), so nothing can sleep while the screen is on. Instead:
+# dim after idle_dim, then deep sleep after idle_sleep with the backlight
+# held off. A touch (GT911 INT on GPIO18, if wired on your board) or the
+# BOOT button wakes it; it boots straight into the last known values (kept
+# in RTC memory) and updates them once Home Assistant is connected.
+# The "Stay awake" switch keeps it awake (for OTA updates, or on USB power).
+
+esphome:
+  includes:
+    - ${project_dir}/src/main/rtc_cache.h
+  on_boot:
+    # Before the backlight output starts: release the pin held low in sleep
+    - priority: 900
+      then:
+        - lambda: "gpio_hold_dis(GPIO_NUM_2);"
+    # Sensors exist, Wi-Fi isn't up yet: show what we knew before sleeping
+    - priority: -50
+      then:
+        - lambda: |-
+            if (panel_cache.magic != PANEL_CACHE_MAGIC) return;
+            sensor::Sensor *tgt[5] = {id(r0_target), id(r1_target), id(r2_target), id(r3_target), id(r4_target)};
+            sensor::Sensor *cur[5] = {id(r0_current), id(r1_current), id(r2_current), id(r3_current), id(r4_current)};
+            sensor::Sensor *hum[5] = {id(r0_humidity), id(r1_humidity), id(r2_humidity), id(r3_humidity), id(r4_humidity)};
+            sensor::Sensor *valve[5] = {id(r0_valve), id(r1_valve), id(r2_valve), id(r3_valve), id(r4_valve)};
+            sensor::Sensor *lo[5] = {id(r0_min), id(r1_min), id(r2_min), id(r3_min), id(r4_min)};
+            sensor::Sensor *hi[5] = {id(r0_max), id(r1_max), id(r2_max), id(r3_max), id(r4_max)};
+            text_sensor::TextSensor *mode[5] = {id(r0_mode), id(r1_mode), id(r2_mode), id(r3_mode), id(r4_mode)};
+            text_sensor::TextSensor *action[5] = {id(r0_action), id(r1_action), id(r2_action), id(r3_action), id(r4_action)};
+            text_sensor::TextSensor *preset[5] = {id(r0_preset), id(r1_preset), id(r2_preset), id(r3_preset), id(r4_preset)};
+            binary_sensor::BinarySensor *window[5] = {id(r0_window), id(r1_window), id(r2_window), id(r3_window), id(r4_window)};
+            for (int k = 0; k < 5; k++) {
+              const RoomCache &c = panel_cache.room[k];
+              if (!isnan(c.lo)) lo[k]->publish_state(c.lo);
+              if (!isnan(c.hi)) hi[k]->publish_state(c.hi);
+              if (!isnan(c.tgt)) tgt[k]->publish_state(c.tgt);
+              if (!isnan(c.cur)) cur[k]->publish_state(c.cur);
+              if (!isnan(c.hum)) hum[k]->publish_state(c.hum);
+              if (!isnan(c.valve)) valve[k]->publish_state(c.valve);
+              if (c.mode[0]) mode[k]->publish_state(c.mode);
+              if (c.action[0]) action[k]->publish_state(c.action);
+              if (c.preset[0]) preset[k]->publish_state(c.preset);
+              window[k]->publish_state(c.window);
+            }
+            if (!isnan(panel_cache.outdoor)) id(outdoor_temp).publish_state(panel_cache.outdoor);
+            id(main_valve).publish_state(panel_cache.main_valve);
+            if (panel_cache.central[0]) id(central_mode).publish_state(panel_cache.central);
+        - script.execute: refresh_status
+
+deep_sleep:
+  id: sleep_ctl
+  # Woken only by these; no timed wake-ups
+  esp32_ext1_wakeup:
+    mode: ANY_LOW
+    pins:
+      - number: GPIO0       # BOOT button (pull-up on the board)
+        ignore_strapping_warning: true
+      - number: GPIO18      # GT911 INT, low while touched (if connected)
+        mode:
+          input: true
+          pullup: true
+
+switch:
+  - platform: template
+    id: stay_awake
+    name: Stay awake
+    icon: mdi:sleep-off
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+
+script:
+  # Called by LVGL's on_idle after idle_sleep (src/main/ui.yaml)
+  - id: idle_sleep
+    mode: single
+    then:
+      - if:
+          condition:
+            switch.is_on: stay_awake
+          then:
+            # Awake on purpose: just darken the screen; a touch brings it back
+            - light.turn_off: backlight
+            - lvgl.tileview.select: { id: tv_rooms, tile_id: tile_r0, animated: false }
+            - lvgl.pause:
+          else:
+            - script.execute: enter_sleep
+
+  - id: enter_sleep
+    mode: single
+    then:
+      # Let changes made on the screen reach Home Assistant first
+      - wait_until:
+          condition:
+            lambda: |-
+              return !id(send_target_r0).is_running() && !id(send_target_r1).is_running() &&
+                     !id(send_target_r2).is_running() && !id(send_target_r3).is_running() &&
+                     !id(send_target_r4).is_running();
+          timeout: 10s
+      - script.execute: save_cache
+      - light.turn_off: { id: backlight, transition_length: 0s }
+      - delay: 50ms
+      - lvgl.pause:
+      # Keep the backlight driver off while sleeping (the pin would float)
+      - lambda: |-
+          gpio_set_direction(GPIO_NUM_2, GPIO_MODE_OUTPUT);
+          gpio_set_level(GPIO_NUM_2, 0);
+          gpio_hold_en(GPIO_NUM_2);
+          gpio_deep_sleep_hold_en();
+      - deep_sleep.enter: sleep_ctl
+
+  - id: save_cache
+    then:
+      - lambda: |-
+          sensor::Sensor *tgt[5] = {id(r0_target), id(r1_target), id(r2_target), id(r3_target), id(r4_target)};
+          sensor::Sensor *cur[5] = {id(r0_current), id(r1_current), id(r2_current), id(r3_current), id(r4_current)};
+          sensor::Sensor *hum[5] = {id(r0_humidity), id(r1_humidity), id(r2_humidity), id(r3_humidity), id(r4_humidity)};
+          sensor::Sensor *valve[5] = {id(r0_valve), id(r1_valve), id(r2_valve), id(r3_valve), id(r4_valve)};
+          sensor::Sensor *lo[5] = {id(r0_min), id(r1_min), id(r2_min), id(r3_min), id(r4_min)};
+          sensor::Sensor *hi[5] = {id(r0_max), id(r1_max), id(r2_max), id(r3_max), id(r4_max)};
+          text_sensor::TextSensor *mode[5] = {id(r0_mode), id(r1_mode), id(r2_mode), id(r3_mode), id(r4_mode)};
+          text_sensor::TextSensor *action[5] = {id(r0_action), id(r1_action), id(r2_action), id(r3_action), id(r4_action)};
+          text_sensor::TextSensor *preset[5] = {id(r0_preset), id(r1_preset), id(r2_preset), id(r3_preset), id(r4_preset)};
+          binary_sensor::BinarySensor *window[5] = {id(r0_window), id(r1_window), id(r2_window), id(r3_window), id(r4_window)};
+          for (int k = 0; k < 5; k++) {
+            RoomCache &c = panel_cache.room[k];
+            c.tgt = tgt[k]->state; c.cur = cur[k]->state; c.hum = hum[k]->state;
+            c.valve = valve[k]->state; c.lo = lo[k]->state; c.hi = hi[k]->state;
+            cache_copy(c.mode, sizeof(c.mode), mode[k]->state);
+            cache_copy(c.action, sizeof(c.action), action[k]->state);
+            cache_copy(c.preset, sizeof(c.preset), preset[k]->state);
+            c.window = window[k]->has_state() && window[k]->state;
+          }
+          panel_cache.outdoor = id(outdoor_temp).state;
+          panel_cache.main_valve = id(main_valve).has_state() && id(main_valve).state;
+          cache_copy(panel_cache.central, sizeof(panel_cache.central), id(central_mode).state);
+          panel_cache.magic = PANEL_CACHE_MAGIC;

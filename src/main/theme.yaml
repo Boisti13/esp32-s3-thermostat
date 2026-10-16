@@ -31,6 +31,10 @@ substitutions:
   ic_cloud: "\U000F0595"
   ic_stop: "\U000F0667"
   ic_offline: "\U000F0319"
+  ic_battery: "\U000F0079"
+  ic_battery_50: "\U000F007E"
+  ic_battery_20: "\U000F007B"
+  ic_battery_alert: "\U000F10CD"
 
   text_glyphs: " !#%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz|°·–"
 
@@ -77,7 +81,8 @@ font:
     extras:
       - file: ${project_dir}/src/assets/fonts/materialdesignicons-webfont.ttf
         glyphs: ["${ic_fire}", "${ic_thermometer}", "${ic_water}", "${ic_valve}",
-                 "${ic_cloud}", "${ic_stop}", "${ic_offline}", "${ic_power}", "${ic_window}"]
+                 "${ic_cloud}", "${ic_stop}", "${ic_offline}", "${ic_power}", "${ic_window}",
+                 "${ic_battery}", "${ic_battery_50}", "${ic_battery_20}", "${ic_battery_alert}"]
   # Big values on the stat tiles
   - file: { type: gfonts, family: Inter, weight: 600 }
     id: font_value

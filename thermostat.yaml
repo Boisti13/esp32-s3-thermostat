@@ -13,6 +13,7 @@ packages:
   theme: !include src/main/theme.yaml
   status: !include src/main/status.yaml
   ui: !include src/main/ui.yaml
+  power: !include src/main/power.yaml
   room_0: !include { file: src/room/room.yaml, vars: { i: "0", entity: "${room_0_entity}", window: "${room_0_window}" } }
   room_1: !include { file: src/room/room.yaml, vars: { i: "1", entity: "${room_1_entity}", window: "${room_1_window}" } }
   room_2: !include { file: src/room/room.yaml, vars: { i: "2", entity: "${room_2_entity}", window: "${room_2_window}" } }
@@ -24,7 +25,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "boisti13.esp32-s3-thermostat"
-    version: "0.1.0"
+    version: "0.2.0"
   on_boot:
     - priority: -100
       then:
@@ -51,6 +52,9 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  # Every wake is a fresh boot: skip the scan, keep the radio dozing
+  fast_connect: true
+  power_save_mode: light
   ap:
     ssid: "Thermostat Fallback"
     password: !secret ap_password

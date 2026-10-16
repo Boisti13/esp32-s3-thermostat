@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.1.0-orange)
+![Version](https://img.shields.io/badge/version-0.2.0-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -29,9 +29,12 @@ but works with any Home Assistant `climate` entity that heats.
 - **Status bar**: clock, outdoor temperature, a flame while the main heating
   supply is on, a warning when the central mode is *Stopped* or Home
   Assistant isn't connected.
-- **Screen saver**: dims after a minute, goes dark after five. A touch on
-  the dark screen only wakes it, it never presses a button. The backlight is a light entity
-  in Home Assistant, e.g. for a night schedule.
+- **Runs on a battery**: dims after 15 s, deep-sleeps after 40 s with the
+  backlight held off. A touch or the BOOT button wakes it, and it shows the
+  last known values at once (kept in RTC memory) while it reconnects. A
+  *Stay awake* switch in Home Assistant keeps it on for updates or on USB.
+- **Battery level** in the status bar and Home Assistant (optional, needs
+  two resistors, see [Battery](#battery)).
 
 | Heating | Target reached | Window open | Off |
 |---|---|---|---|
@@ -46,7 +49,7 @@ but works with any Home Assistant `climate` entity that heats.
 | Screen | 4.3" IPS, 480 × 272, 16-bit RGB parallel (ST7262) |
 | Touch | GT911 capacitive, I²C on GPIO19/20, INT 18, RST 38 |
 | Backlight | GPIO2 (PWM) |
-| Power | USB-C, 5 V |
+| Power | USB-C, 5 V, or a single-cell LiPo on the battery plug |
 
 The resistive version (ESP32-4827S043**R**, XPT2046) has the same screen but
 needs a different `touchscreen:` block in `src/main/hardware.yaml`.
@@ -74,6 +77,45 @@ packages:
   panel: !include esp32-s3-thermostat/thermostat.yaml
 ```
 
+## Battery
+
+The panel can't sleep while the screen shows anything: an RGB panel has no
+memory of its own, the ESP32 streams every frame. So it is either fully
+awake (screen on) or in deep sleep (screen off).
+
+| State | What runs | Rough draw |
+|---|---|---|
+| Awake | CPU, Wi-Fi, panel, backlight at 70 % | 150–250 mA |
+| Dimmed (after `idle_dim`) | same, backlight 15 % | ~100 mA |
+| Deep sleep (after `idle_sleep`) | ESP32 off, touch controller on | board-dependent, see below |
+
+- **Wake-up**: BOOT button always; a touch only if the board connects the
+  GT911's INT line to GPIO18 (not every batch does; check with a
+  multimeter, or bridge it). After a wake the screen is up in about a
+  second with the last values; live data follows in 2–4 s (Wi-Fi with
+  `fast_connect`, then Home Assistant). A static IP (`manual_ip` under
+  `wifi:`) saves another second.
+- **Sleep current is mostly the board**, not the ESP32 (~10 µA): the 3.3 V
+  regulator's own draw, the power LED, the USB-serial chip and the
+  charger. Measure it once. If it's several mA, the usual fixes are
+  removing the power LED and swapping the regulator for a low-quiescent
+  one (e.g. ME6211/HT7333); that is the difference between days and months
+  per charge.
+- **Stay awake** (switch in Home Assistant): no deep sleep, just a dark
+  screen. Turn it on before an OTA update; the device can only be reached
+  while awake, so wake it with a touch first.
+- Make it last longer: lower `active_brightness`, shorter `idle_sleep`.
+
+### Battery level
+
+The board doesn't route the battery voltage to any pin. Two 220 kΩ resistors
+from battery + to GND with the middle on **GPIO17** (header P4), plus 100 nF
+from GPIO17 to GND, then add `battery: !include src/main/battery.yaml` to
+the packages in `thermostat.yaml`. It reads once per wake, before Wi-Fi
+starts (GPIO17 is on ADC2, which the radio blocks), and shows a battery icon
+with % in the status bar plus *Battery* and *Battery voltage* in Home
+Assistant. The divider draws ~10 µA all the time.
+
 ## Rooms and entities
 
 All of it lives in `src/main/entities.yaml`.
@@ -86,7 +128,8 @@ All of it lives in `src/main/entities.yaml`.
 | `outdoor_temperature_entity` | `sensor.virtual_outdoor_temperature` | status bar |
 | `main_valve_entity` | `switch.heat_exchanger` | flame in the status bar while on; `switch.none` = never |
 | `central_mode_entity` | `select.central_mode` | warning while *Stopped* |
-| `idle_dim`, `idle_off`, `dim_brightness` | `60s`, `5min`, `20%` | screen saver |
+| `idle_dim`, `idle_sleep` | `15s`, `40s` | dim, then deep sleep |
+| `dim_brightness`, `active_brightness` | `15%`, `70%` | backlight; `active_brightness_float` must match |
 
 From each climate entity the panel reads its state (`heat`/`off`) and the
 attributes `temperature`, `current_temperature`, `current_humidity`,
@@ -115,6 +158,9 @@ src/main/theme.yaml        colours, fonts, icons
 src/main/ui.yaml           LVGL: theme, tileview, screen saver
 src/main/status.yaml       status bar logic (clock, outdoor, central mode)
 src/main/status_widgets.yaml   status bar and page dots
+src/main/power.yaml        deep sleep, wake pins, RTC value cache, Stay awake
+src/main/rtc_cache.h       the cache's layout
+src/main/battery.yaml      optional battery level (needs the mod)
 src/room/room.yaml         one room: HA values, refresh, actions (×5)
 src/room/tile.yaml         one room's tile (×5)
 demo/screenshot.yaml       the UI on a PC (SDL) with made-up values

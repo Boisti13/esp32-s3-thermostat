@@ -1,0 +1,55 @@
+# Optional: battery level. The board doesn't route the battery voltage to
+# any pin, so this needs a small mod (README → Battery level): a 220 kΩ /
+# 220 kΩ divider from the battery's + to GND, middle to GPIO17 (header P4),
+# 100 nF from GPIO17 to GND. Add to thermostat.yaml's packages:
+#   battery: !include src/main/battery.yaml
+#
+# Read once per wake, before Wi-Fi starts: GPIO17 is on ADC2, which the
+# radio uses while it's on. Shown in the status bar and sent to Home Assistant.
+
+esphome:
+  on_boot:
+    - priority: 500   # after the ADC is set up, before Wi-Fi (250)
+      then:
+        - component.update: battery_voltage
+
+sensor:
+  - platform: adc
+    id: battery_voltage
+    name: Battery voltage
+    pin: GPIO17
+    attenuation: 12db
+    samples: 16
+    update_interval: never
+    accuracy_decimals: 2
+    entity_category: diagnostic
+    filters:
+      - multiply: 2.0   # 1:1 divider
+    on_value:
+      - component.update: battery_level
+
+  # Single-cell LiPo, resting voltage to charge (rough curve)
+  - platform: template
+    id: battery_level
+    name: Battery
+    device_class: battery
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    update_interval: never
+    lambda: |-
+      const float v = id(battery_voltage).state;
+      if (isnan(v)) return NAN;
+      static const float V[] = {3.30, 3.50, 3.60, 3.70, 3.75, 3.80, 3.87, 3.95, 4.05, 4.15};
+      static const float P[] = {0, 5, 10, 25, 40, 50, 60, 75, 90, 100};
+      if (v <= V[0]) return 0;
+      for (int k = 1; k < 10; k++)
+        if (v < V[k]) return P[k - 1] + (P[k] - P[k - 1]) * (v - V[k - 1]) / (V[k] - V[k - 1]);
+      return 100;
+    on_value:
+      - lambda: |-
+          char buf[16];
+          const char *icon = x < 15 ? "${ic_battery_alert}" : x < 35 ? "${ic_battery_20}" : x < 70 ? "${ic_battery_50}" : "${ic_battery}";
+          snprintf(buf, sizeof(buf), "%s %.0f%%", icon, x);
+          lv_label_set_text(id(lbl_battery), buf);
+          lv_obj_set_style_text_color(id(lbl_battery), lv_color_hex(x < 15 ? 0x${hex_warn} : 0x${hex_text2}), 0);
+          lv_obj_remove_flag(id(lbl_battery), LV_OBJ_FLAG_HIDDEN);

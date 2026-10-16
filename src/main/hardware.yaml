@@ -31,7 +31,8 @@ touchscreen:
     id: main_touch
     i2c_id: touch_i2c
     display: main_display
-    interrupt_pin: GPIO18
+    # Polled: INT (GPIO18) is only connected on some boards; where it is,
+    # src/main/power.yaml uses it to wake from deep sleep on a touch.
     reset_pin: GPIO38
     on_release:
       # A touch while the screen is dark only wakes it.
@@ -83,4 +84,4 @@ light:
     icon: mdi:brightness-6
     output: backlight_pwm
     restore_mode: ALWAYS_ON
-    default_transition_length: 400ms
+    default_transition_length: 300ms

@@ -34,6 +34,19 @@ bash ../claude-setup/scripts/esphome-check.sh thermostat.yaml           # + comp
 ESPHome venv) from a copy of the working tree, copy `docs/images/` back, and
 read the PNGs before calling the change done.
 
+## Home Assistant copy
+
+The ESPHome app builds from `/homeassistant/esphome/esp32-s3-thermostat/`
+(`thermostat.yaml` + `src/`) via the stub
+`/homeassistant/esphome/thermostat-panel.yaml` (sets `project_dir`). Copy a
+new version there only when the owner asks: back up the old folder to
+`/config/project-backups/esphome/esp32-s3-thermostat/` first, replace it
+with `git archive <commit> thermostat.yaml src`, check the files match.
+The shared `secrets.yaml` there has `thermostat_api_key`.
+
+The panel deep-sleeps on battery: it is only reachable over the network
+while awake. For OTA, wake it and turn on its *Stay awake* switch.
+
 ## Versions to bump
 
 | Change | Bump |

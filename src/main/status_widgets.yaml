@@ -9,7 +9,7 @@
     text_font: font_body
     text_color: col_text2
 
-# Right side: [central stopped] [no connection] [flame] [outdoor]
+# Right side: [central stopped] [no connection] [flame] [outdoor] [battery]
 - obj:
     align: TOP_RIGHT
     x: -10
@@ -45,6 +45,13 @@
           hidden: true
       - label:
           id: lbl_outdoor
+          text: ""
+          text_font: font_body
+          text_color: col_text2
+          hidden: true
+      # Filled in by src/main/battery.yaml, if used
+      - label:
+          id: lbl_battery
           text: ""
           text_font: font_body
           text_color: col_text2

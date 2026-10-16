@@ -30,7 +30,11 @@ substitutions:
   # Versatile Thermostat central mode; "Stopped" is shown as a warning
   central_mode_entity: select.central_mode
 
-  # Screen: dim after idle_dim, dark after idle_off (touch wakes it)
-  idle_dim: 60s
-  idle_off: 5min
-  dim_brightness: 20%
+  # Screen and battery: dim after idle_dim, deep sleep after idle_sleep (a
+  # touch or the BOOT button wakes it). The backlight is most of the power
+  # draw: active_brightness (and its float twin) sets how bright it gets.
+  idle_dim: 15s
+  idle_sleep: 40s
+  dim_brightness: 15%
+  active_brightness: 70%
+  active_brightness_float: "0.7"

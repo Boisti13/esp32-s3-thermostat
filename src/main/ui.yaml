@@ -2,14 +2,20 @@
 # under a fixed status bar (src/main/status_widgets.yaml), dark theme, and
 # the idle behaviour (dim, then dark; a touch wakes it).
 
+globals:
+  # active_brightness as a number, for comparisons in lambdas
+  - id: active_brightness_value
+    type: float
+    initial_value: "${active_brightness_float}"
+
 script:
   - id: wake_screen
     then:
       - if:
           condition:
-            lambda: "return !id(backlight).current_values.is_on() || id(backlight).current_values.get_brightness() < 0.99f;"
+            lambda: "return !id(backlight).current_values.is_on() || id(backlight).current_values.get_brightness() < id(active_brightness_value) - 0.01f;"
           then:
-            - light.turn_on: { id: backlight, brightness: 100% }
+            - light.turn_on: { id: backlight, brightness: "${active_brightness}" }
 
 lvgl:
   displays: [main_display]
@@ -53,12 +59,10 @@ lvgl:
     - timeout: ${idle_dim}
       then:
         - light.turn_on: { id: backlight, brightness: "${dim_brightness}" }
-    - timeout: ${idle_off}
+    # Deep sleep on the board, dark screen on the PC demo (idle_sleep script)
+    - timeout: ${idle_sleep}
       then:
-        - light.turn_off: backlight
-        # Next time the screen wakes up, it shows the home room
-        - lvgl.tileview.select: { id: tv_rooms, tile_id: tile_r0, animated: false }
-        - lvgl.pause:
+        - script.execute: idle_sleep
 
   top_layer:
     widgets: !include status_widgets.yaml

@@ -95,6 +95,13 @@ light:
     output: backlight_pwm
     restore_mode: ALWAYS_ON
 
+# The board deep-sleeps here (src/main/power.yaml); the demo only goes dark
+script:
+  - id: idle_sleep
+    then:
+      - light.turn_off: backlight
+      - lvgl.pause:
+
 # Show each room in turn (for the screenshot script)
 interval:
   - interval: 3s

@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.2.0 — 2026-10-16
+
+### Added
+
+- Battery operation: deep sleep after 40 s idle (dim after 15 s), wake by
+  touch (if the GT911 INT line is connected) or the BOOT button.
+- The last known values are kept through deep sleep and shown right after
+  waking, before Home Assistant has reconnected.
+- *Stay awake* switch in Home Assistant (for OTA updates or USB power).
+- Optional battery level (`src/main/battery.yaml`, needs a resistor divider
+  to GPIO17): status bar icon and Home Assistant sensors.
+
+### Changed
+
+- Backlight at 70 % while in use (`active_brightness`), 15 % when dimmed.
+- Wi-Fi connects with `fast_connect` and light power save.
+- Touch is polled; GPIO18 (INT) is only used to wake from deep sleep.
+
 ## v0.1.0 — 2026-10-16
 
 First version.
