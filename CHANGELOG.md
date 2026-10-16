@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.3.0 — 2026-10-16
+
+### Changed
+
+- **Targets the Guition JC4827W543C**, the board this was meant for: NV3041A
+  panel on quad SPI, backlight on GPIO1, GT911 on SDA 8 / SCL 4 / INT 3.
+  v0.1.0–v0.2.1 used the pins of the look-alike Sunton ESP32-4827S043C, so
+  the screen stayed dark and touch didn't answer.
+- Display back to 480 × 272 (the 280-row workaround was for the Sunton's RGB
+  driver).
+- Touch uses its interrupt again; the same pin (GPIO3) wakes from deep sleep.
+- Optional battery level reads an ADC1 pin (`battery_adc_pin`, default
+  GPIO5).
+
 ## v0.2.1 — 2026-10-16
 
 ### Fixed

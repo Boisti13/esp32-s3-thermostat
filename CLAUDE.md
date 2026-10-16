@@ -1,7 +1,8 @@
 # Working on this repository
 
-ESPHome + LVGL firmware that turns a Sunton/Guition ESP32-4827S043C (4.3"
-480×272 touch display) into a Home Assistant thermostat panel. Layout and
+ESPHome + LVGL firmware that turns a Guition JC4827W543C (4.3" 480×272 IPS
+touch display, NV3041A on quad SPI; not the look-alike Sunton
+ESP32-4827S043) into a Home Assistant thermostat panel. Layout and
 how-tos are in [README.md](README.md); this is the checklist.
 Infrastructure (Home Assistant, servers) is not in this repository.
 

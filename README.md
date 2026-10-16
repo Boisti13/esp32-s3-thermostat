@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.2.1-orange)
+![Version](https://img.shields.io/badge/version-0.3.0-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -44,15 +44,18 @@ but works with any Home Assistant `climate` entity that heats.
 
 | Part | |
 |---|---|
-| Board | Sunton/Guition **ESP32-4827S043C** (the *C* = capacitive touch) |
+| Board | Guition **JC4827W543C** (the *C* = capacitive touch) |
 | Chip | ESP32-S3-WROOM-1 N4R8: 4 MB flash, 8 MB octal PSRAM |
-| Screen | 4.3" IPS, 480 × 272, 16-bit RGB parallel (ST7262) |
-| Touch | GT911 capacitive, I²C on GPIO19/20, INT 18, RST 38 |
-| Backlight | GPIO2 (PWM) |
+| Screen | 4.3" IPS, 480 × 272, NV3041A on quad SPI (CLK 47, D0–D3 21/48/40/39, CS 45); keeps its own picture |
+| Touch | GT911 capacitive, I²C SDA 8 / SCL 4, INT 3, RST 38 |
+| Backlight | GPIO1 (PWM, 1 kHz) |
 | Power | USB-C, 5 V, or a single-cell LiPo on the battery plug |
 
-The resistive version (ESP32-4827S043**R**, XPT2046) has the same screen but
-needs a different `touchscreen:` block in `src/main/hardware.yaml`.
+Not to be confused with the Sunton **ESP32-4827S043** (same size, TN panel
+on a 16-bit RGB bus, other pins); this firmware doesn't run on that one.
+The resistive JC4827W543**R** needs a different `touchscreen:` block in
+`src/main/hardware.yaml`. If the picture is upside down on your unit, set
+both `mirror_x`/`mirror_y` under the display's `transform:` to `false`.
 
 ## Install
 
@@ -79,8 +82,8 @@ packages:
 
 ## Battery
 
-The panel can't sleep while the screen shows anything: an RGB panel has no
-memory of its own, the ESP32 streams every frame. So it is either fully
+The backlight is most of the draw while the screen is on and Wi-Fi the
+rest, so there is no useful half-awake state: the panel is either fully
 awake (screen on) or in deep sleep (screen off).
 
 | State | What runs | Rough draw |
@@ -89,9 +92,7 @@ awake (screen on) or in deep sleep (screen off).
 | Dimmed (after `idle_dim`) | same, backlight 15 % | ~100 mA |
 | Deep sleep (after `idle_sleep`) | ESP32 off, touch controller on | board-dependent, see below |
 
-- **Wake-up**: BOOT button always; a touch only if the board connects the
-  GT911's INT line to GPIO18 (not every batch does; check with a
-  multimeter, or bridge it). After a wake the screen is up in about a
+- **Wake-up**: a touch (GT911 INT on GPIO3) or the BOOT button. After a wake the screen is up in about a
   second with the last values; live data follows in 2–4 s (Wi-Fi with
   `fast_connect`, then Home Assistant). A static IP (`manual_ip` under
   `wifi:`) saves another second.
@@ -109,10 +110,12 @@ awake (screen on) or in deep sleep (screen off).
 ### Battery level
 
 The board doesn't route the battery voltage to any pin. Two 220 kΩ resistors
-from battery + to GND with the middle on **GPIO17** (header P4), plus 100 nF
-from GPIO17 to GND, then add `battery: !include src/main/battery.yaml` to
-the packages in `thermostat.yaml`. It reads once per wake, before Wi-Fi
-starts (GPIO17 is on ADC2, which the radio blocks), and shows a battery icon
+from battery + to GND with the middle on a free ADC1 pin of an expansion
+header (`battery_adc_pin`, default **GPIO5**; check your board's header
+print), plus 100 nF from that pin to GND, then add
+`battery: !include src/main/battery.yaml` to the packages in
+`thermostat.yaml`. It reads once per wake, before Wi-Fi starts (the radio's
+current makes the reading sag), and shows a battery icon
 with % in the status bar plus *Battery* and *Battery voltage* in Home
 Assistant. The divider draws ~10 µA all the time.
 
@@ -152,7 +155,7 @@ and a second later Home Assistant gets `climate.set_temperature` with 20.0
 
 ```
 thermostat.yaml            device: Wi-Fi, API, OTA, packages
-src/main/hardware.yaml     board: PSRAM, RGB panel, GT911 touch, backlight
+src/main/hardware.yaml     board: PSRAM, QSPI panel, GT911 touch, backlight
 src/main/entities.yaml     your rooms and entities
 src/main/theme.yaml        colours, fonts, icons
 src/main/ui.yaml           LVGL: theme, tileview, screen saver
@@ -166,11 +169,6 @@ src/room/tile.yaml         one room's tile (×5)
 demo/screenshot.yaml       the UI on a PC (SDL) with made-up values
 scripts/screenshots.sh     renders docs/images/room-*.png
 ```
-
-The board's display is configured as 480 × **280**: ESP-IDF's RGB driver
-needs the frame to be a multiple of ESPHome's 10-row bounce buffer, which
-272 isn't. The extra 8 rows fall off the bottom of the glass, so nothing in
-the UI goes below y 272. Touch is calibrated 1:1 to match.
 
 ## Development
 

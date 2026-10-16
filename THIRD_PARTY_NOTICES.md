@@ -22,6 +22,6 @@ licenses.
 
 ## Board pin map
 
-Pins and panel timings follow the board definition in
-[rzeldent/platformio-espressif32-sunton](https://github.com/rzeldent/platformio-espressif32-sunton)
+Pins follow ESPHome's built-in `JC4827W543` display model and the
+[ESPHome device page for the Guition JC4827W543C](https://devices.esphome.io/devices/guition-jc4827543c/)
 (facts, no code copied).

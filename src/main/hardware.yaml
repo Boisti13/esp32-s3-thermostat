@@ -1,7 +1,8 @@
-# Sunton ESP32-4827S043C (also sold as Guition): ESP32-S3-WROOM-1 N4R8
-# (4 MB flash, 8 MB octal PSRAM), 4.3" 480x272 IPS RGB panel (ST7262,
-# 16-bit parallel, no init sequence) and a GT911 capacitive touch controller.
-# Pins from the board schematic as used by rzeldent/platformio-espressif32-sunton.
+# Guition JC4827W543C: ESP32-S3-WROOM-1 N4R8 (4 MB flash, 8 MB octal
+# PSRAM), 4.3" 480x272 IPS panel with an NV3041A controller on quad SPI
+# (the panel keeps its own picture), GT911 capacitive touch.
+# Pins from ESPHome's built-in JC4827W543 model and the device page
+# devices.esphome.io/devices/guition-jc4827543c.
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -10,20 +11,35 @@ esp32:
   cpu_frequency: 240MHz
   framework:
     type: esp-idf
-    sdkconfig_options:
-      # Bigger data cache: the panel streams its frame buffer from PSRAM all
-      # the time; with the defaults the picture drifts while Wi-Fi is busy.
-      CONFIG_ESP32S3_DATA_CACHE_64KB: y
-      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: y
 
 psram:
   mode: octal
   speed: 80MHz
 
+spi:
+  - id: display_qspi
+    type: quad
+    clk_pin: GPIO47
+    data_pins: [GPIO21, GPIO48, GPIO40, GPIO39]
+
+display:
+  - platform: mipi_spi
+    id: main_display
+    model: JC4827W543   # NV3041A, CS on GPIO45, init sequence built in
+    spi_id: display_qspi
+    # The board's natural orientation is upside down: turn it 180° in the
+    # panel itself (LVGL doesn't allow a display rotation)
+    transform:
+      swap_xy: false
+      mirror_x: true
+      mirror_y: true
+    update_interval: never
+    auto_clear_enabled: false
+
 i2c:
   - id: touch_i2c
-    sda: GPIO19
-    scl: GPIO20
+    sda: GPIO8
+    scl: GPIO4
     frequency: 400kHz
 
 touchscreen:
@@ -31,15 +47,15 @@ touchscreen:
     id: main_touch
     i2c_id: touch_i2c
     display: main_display
-    # Polled: INT (GPIO18) is only connected on some boards; where it is,
-    # src/main/power.yaml uses it to wake from deep sleep on a touch.
+    # INT also wakes the panel from deep sleep (src/main/power.yaml)
+    interrupt_pin:
+      number: GPIO3
+      ignore_strapping_warning: true
+      allow_other_uses: true
     reset_pin: GPIO38
-    # Touch coordinates 1:1 (the display is 280 high, the glass 272)
-    calibration:
-      x_min: 0
-      x_max: 480
-      y_min: 0
-      y_max: 280
+    transform:
+      mirror_x: true
+      mirror_y: true
     on_release:
       # A touch while the screen is dark only wakes it.
       - if:
@@ -50,42 +66,11 @@ touchscreen:
     on_touch:
       - script.execute: wake_screen
 
-display:
-  - platform: mipi_rgb
-    id: main_display
-    model: RPI           # plain RGB panel, no SPI init sequence
-    # The glass has 272 rows, but the driver refuses 272: ESP-IDF needs the
-    # frame to be a multiple of its bounce buffer (10 rows), "lcd setup
-    # failed". 280 rows are sent; the last 8 fall off the bottom of the
-    # panel, and the UI stays within the top 272 (see README → Layout).
-    dimensions:
-      width: 480
-      height: 280
-    color_order: RGB     # if red and blue look swapped, change to BGR
-    update_interval: never
-    auto_clear_enabled: false
-    pclk_frequency: 8MHz
-    pclk_inverted: true
-    de_pin: GPIO40
-    hsync_pin: GPIO39
-    vsync_pin: GPIO41
-    pclk_pin: GPIO42
-    hsync_pulse_width: 4
-    hsync_back_porch: 43
-    hsync_front_porch: 8
-    vsync_pulse_width: 4
-    vsync_back_porch: 12
-    vsync_front_porch: 8
-    data_pins:
-      red: [GPIO8, GPIO3, GPIO46, GPIO9, GPIO1]
-      green: [GPIO5, GPIO6, GPIO7, GPIO15, GPIO16, GPIO4]
-      blue: [GPIO45, GPIO48, GPIO47, GPIO21, GPIO14]
-
 output:
   - platform: ledc
     id: backlight_pwm
-    pin: GPIO2
-    frequency: 20kHz   # no audible whine, no flicker in photos
+    pin: GPIO1
+    frequency: 1000Hz   # the backlight driver's tested frequency
 
 light:
   - platform: monochromatic

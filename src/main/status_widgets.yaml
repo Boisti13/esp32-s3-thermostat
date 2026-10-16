@@ -58,7 +58,6 @@
           hidden: true
 
 # Page dots, one per room
-# (from the top: the display is 280 high on the board, only 272 visible)
 - obj:
     align: TOP_MID
     x: -104

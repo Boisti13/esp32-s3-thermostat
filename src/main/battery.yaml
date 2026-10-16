@@ -1,11 +1,15 @@
 # Optional: battery level. The board doesn't route the battery voltage to
 # any pin, so this needs a small mod (README → Battery level): a 220 kΩ /
-# 220 kΩ divider from the battery's + to GND, middle to GPIO17 (header P4),
-# 100 nF from GPIO17 to GND. Add to thermostat.yaml's packages:
+# 220 kΩ divider from the battery's + to GND, middle to battery_adc_pin (a
+# free ADC1 pin on an expansion header, GPIO1-10; default GPIO5), 100 nF
+# from that pin to GND. Add to thermostat.yaml's packages:
 #   battery: !include src/main/battery.yaml
 #
-# Read once per wake, before Wi-Fi starts: GPIO17 is on ADC2, which the
-# radio uses while it's on. Shown in the status bar and sent to Home Assistant.
+# Read once per wake, before Wi-Fi starts (the radio's current draw makes the
+# reading sag). Shown in the status bar and sent to Home Assistant.
+
+substitutions:
+  battery_adc_pin: GPIO5
 
 esphome:
   on_boot:
@@ -17,7 +21,7 @@ sensor:
   - platform: adc
     id: battery_voltage
     name: Battery voltage
-    pin: GPIO17
+    pin: ${battery_adc_pin}
     attenuation: 12db
     samples: 16
     update_interval: never

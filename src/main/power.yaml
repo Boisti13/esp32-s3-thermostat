@@ -1,7 +1,7 @@
-# Battery operation. The RGB panel has no memory of its own (the ESP32
-# streams every frame), so nothing can sleep while the screen is on. Instead:
+# Battery operation. The backlight is most of the draw, and Wi-Fi the rest,
+# so nothing is gained by staying half-awake. Instead:
 # dim after idle_dim, then deep sleep after idle_sleep with the backlight
-# held off. A touch (GT911 INT on GPIO18, if wired on your board) or the
+# held off. A touch (GT911 INT on GPIO3) or the
 # BOOT button wakes it; it boots straight into the last known values (kept
 # in RTC memory) and updates them once Home Assistant is connected.
 # The "Stay awake" switch keeps it awake (for OTA updates, or on USB power).
@@ -13,7 +13,7 @@ esphome:
     # Before the backlight output starts: release the pin held low in sleep
     - priority: 900
       then:
-        - lambda: "gpio_hold_dis(GPIO_NUM_2);"
+        - lambda: "gpio_hold_dis(GPIO_NUM_1);"
     # Sensors exist, Wi-Fi isn't up yet: show what we knew before sleeping
     - priority: -50
       then:
@@ -60,7 +60,9 @@ deep_sleep:
     pins:
       - number: GPIO0       # BOOT button (pull-up on the board)
         ignore_strapping_warning: true
-      - number: GPIO18      # GT911 INT, low while touched (if connected)
+      - number: GPIO3       # GT911 INT, low while touched
+        ignore_strapping_warning: true
+        allow_other_uses: true
         mode:
           input: true
           pullup: true
@@ -107,9 +109,9 @@ script:
       - lvgl.pause:
       # Keep the backlight driver off while sleeping (the pin would float)
       - lambda: |-
-          gpio_set_direction(GPIO_NUM_2, GPIO_MODE_OUTPUT);
-          gpio_set_level(GPIO_NUM_2, 0);
-          gpio_hold_en(GPIO_NUM_2);
+          gpio_set_direction(GPIO_NUM_1, GPIO_MODE_OUTPUT);
+          gpio_set_level(GPIO_NUM_1, 0);
+          gpio_hold_en(GPIO_NUM_1);
           gpio_deep_sleep_hold_en();
       - deep_sleep.enter: sleep_ctl
 
