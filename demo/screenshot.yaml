@@ -82,6 +82,12 @@ touchscreen:
   - platform: sdl
     id: main_touch
     display: main_display
+    on_touch:
+      - lambda: "id(swipe_done) = false;"
+    on_update:
+      - lambda: |-
+          if (!touches.empty())
+            id(touch_moved).execute(touches[0].x_org, touches[0].y_org, touches[0].x, touches[0].y);
 
 output:
   - platform: template

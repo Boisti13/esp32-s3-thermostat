@@ -172,10 +172,6 @@ script:
           lv_label_set_text(id(r${i}_valve_lbl), buf);
           lv_obj_set_style_text_color(id(r${i}_valve_icon), lv_color_hex(heating ? 0x${hex_heat} : 0x${hex_text2}), 0);
 
-          // Window icon next to the room name
-          if (window) lv_obj_remove_flag(id(r${i}_window_icon), LV_OBJ_FLAG_HIDDEN);
-          else lv_obj_add_flag(id(r${i}_window_icon), LV_OBJ_FLAG_HIDDEN);
-
           // Presets: the active one is highlighted (only while on)
           static const char *const PRESETS[4] = {"comfort", "eco", "frost", "boost"};
           lv_obj_t *chips[4] = {id(r${i}_p0), id(r${i}_p1), id(r${i}_p2), id(r${i}_p3)};

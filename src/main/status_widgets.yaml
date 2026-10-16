@@ -1,19 +1,12 @@
 # Widgets on LVGL's top layer (above every room tile), filled in by the
 # refresh_status script in src/main/status.yaml and the tileview's on_value.
 
-- label:
-    id: lbl_clock
-    x: 14
-    y: 8
-    text: "--:--"
-    text_font: font_body
-    text_color: col_text2
-
-# Right side: [central stopped] [no connection] [flame] [outdoor] [battery]
+# Top right, icons only so it never runs into the room name on the left:
+# [central stopped] [no connection] [flame] [battery] [outdoor] [clock]
 - obj:
     align: TOP_RIGHT
     x: -10
-    y: 6
+    y: 9
     width: SIZE_CONTENT
     height: SIZE_CONTENT
     bg_opa: TRANSP
@@ -28,8 +21,8 @@
     widgets:
       - label:
           id: lbl_central
-          text: "${ic_stop} Stopped"
-          text_font: font_small
+          text: "${ic_stop}"
+          text_font: font_body
           text_color: col_warn
           hidden: true
       - label:
@@ -43,12 +36,6 @@
           text_font: font_body
           text_color: col_heat
           hidden: true
-      - label:
-          id: lbl_outdoor
-          text: ""
-          text_font: font_body
-          text_color: col_text2
-          hidden: true
       # Filled in by src/main/battery.yaml, if used
       - label:
           id: lbl_battery
@@ -56,6 +43,17 @@
           text_font: font_body
           text_color: col_text2
           hidden: true
+      - label:
+          id: lbl_outdoor
+          text: ""
+          text_font: font_body
+          text_color: col_text2
+          hidden: true
+      - label:
+          id: lbl_clock
+          text: "--:--"
+          text_font: font_body
+          text_color: col_text
 
 # Page dots, one per room
 - obj:

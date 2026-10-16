@@ -19,21 +19,14 @@ row: 0
 column: ${i}
 dir: HOR
 widgets:
-  # Room name, with a window icon while a window is open
+  # Room name, top left (clock and status icons are top right)
   - label:
       id: r${i}_name_lbl
-      align: TOP_MID
+      x: 14
       y: 6
       text: "${name}"
       text_font: font_title
       text_color: col_text
-  - label:
-      id: r${i}_window_icon
-      align_to: { id: "r${i}_name_lbl", align: OUT_RIGHT_MID, x: 8 }
-      text: "${ic_window}"
-      text_font: font_title
-      text_color: col_warn
-      hidden: true
 
   # The dial: drag the knob (or tap the ring) to set the target
   - arc:
@@ -154,13 +147,16 @@ widgets:
       on_long_press_repeat:
         - script.execute: { id: "step_target_r${i}", steps: 1 }
 
-  # Stat tiles: humidity and valve opening (caption on top, value below)
+  # Humidity and valve opening: caption on top, value below, no tile
   - obj:
       x: 290
       y: 40
       width: 85
       height: 58
-      styles: st_card
+      bg_opa: TRANSP
+      border_width: 0
+      pad_all: 8
+      clickable: false
       scrollable: false
       widgets:
         - label: { align: TOP_LEFT, y: -2, text: "${ic_water} Humidity", text_font: font_small, text_color: col_text2 }
@@ -170,7 +166,10 @@ widgets:
       y: 40
       width: 85
       height: 58
-      styles: st_card
+      bg_opa: TRANSP
+      border_width: 0
+      pad_all: 8
+      clickable: false
       scrollable: false
       widgets:
         - label: { id: "r${i}_valve_icon", align: TOP_LEFT, y: -2, text: "${ic_valve} Valve", text_font: font_small, text_color: col_text2 }
@@ -233,7 +232,6 @@ widgets:
       y: 220
       width: 176
       height: 40
-      styles: st_chip
       widgets:
         - label:
             id: r${i}_power_lbl

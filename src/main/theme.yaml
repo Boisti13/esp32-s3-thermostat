@@ -7,13 +7,12 @@ substitutions:
   # #161C27 came out bright teal). So: pure black background, neutral greys
   # (R = G = B), dark tones darker than they look on a monitor.
   hex_bg: "000000"        # screen background (black stays black)
-  hex_card: "121212"      # tiles, buttons
-  hex_card_hi: "242424"   # pressed
-  hex_track: "1A1A1A"     # arc background
+  hex_card_hi: "3A3A3A"   # pressed button fill
+  hex_line: "4A4A4A"      # button outlines
+  hex_track: "303030"     # arc background
   hex_text: "F0F0F0"
   hex_text2: "9A9A9A"     # captions, secondary values
   hex_heat: "FF7A2F"      # heating
-  hex_heat_soft: "2A1408" # selected preset background
   hex_idle: "4C9BFF"      # on, not heating right now
   hex_off: "3C3C3C"       # off
   hex_warn: "FFC042"      # window open, central mode stopped, no connection
@@ -32,7 +31,7 @@ substitutions:
   ic_minus: "\U000F0374"
   ic_valve: "\U000F1066"
   ic_cloud: "\U000F0595"
-  ic_stop: "\U000F0667"
+  ic_stop: "\U000F0AD8"   # radiator-off
   ic_offline: "\U000F0319"
   ic_battery: "\U000F0079"
   ic_battery_50: "\U000F007E"
@@ -43,13 +42,12 @@ substitutions:
 
 color:
   - { id: col_bg, hex: "${hex_bg}" }
-  - { id: col_card, hex: "${hex_card}" }
   - { id: col_card_hi, hex: "${hex_card_hi}" }
+  - { id: col_line, hex: "${hex_line}" }
   - { id: col_track, hex: "${hex_track}" }
   - { id: col_text, hex: "${hex_text}" }
   - { id: col_text2, hex: "${hex_text2}" }
   - { id: col_heat, hex: "${hex_heat}" }
-  - { id: col_heat_soft, hex: "${hex_heat_soft}" }
   - { id: col_idle, hex: "${hex_idle}" }
   - { id: col_off, hex: "${hex_off}" }
   - { id: col_warn, hex: "${hex_warn}" }

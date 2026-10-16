@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.4.0 — 2026-10-16
+
+### Changed
+
+- New look for this panel: outlined buttons on black, solid orange for the
+  active preset and *Heating on*, humidity and valve without tiles. Dim
+  filled shapes had stair-stepped corners in 16-bit colour.
+- Header: room name on the left, clock and status icons on the right (they
+  overlapped). The window icon next to the name is gone; the dial still
+  says *Window open*. *Central mode stopped* is a radiator-off icon.
+
+### Fixed
+
+- Swiping worked in one direction only: rooms are now switched from the
+  touch coordinates (50 px sideways), and a swipe no longer presses the
+  button it started on. Swipes and touches are logged.
+
 ## v0.3.3 — 2026-10-16
 
 ### Changed

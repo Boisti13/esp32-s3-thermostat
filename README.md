@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.3.3-orange)
+![Version](https://img.shields.io/badge/version-0.4.0-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -18,7 +18,12 @@ but works with any Home Assistant `climate` entity that heats.
 
 - **One tile per room**: swipe left for the next room, right for the
   previous; the room switches in one go (no drag animation, which an SPI
-  panel can't draw smoothly). Dots at the bottom show where you are. The home room comes first and comes back when the screen wakes.
+  panel can't draw smoothly), and a swipe never presses the button it
+  started on. Dots at the bottom show where you are.
+- **Made for this panel**: black background, outlined buttons, solid orange
+  for what's active. The panel brightens and tints dark colours, and in
+  16-bit colour dim filled shapes get stair-stepped edges; bright edges on
+  black stay smooth. The home room comes first and comes back when the screen wakes.
 - **Big dial**: drag the knob or tap the ring, or use − / + (hold to repeat),
   in the entity's own steps of 0.5 °C. Sent to Home Assistant when you let
   go, so the dial never fights you.
@@ -27,9 +32,10 @@ but works with any Home Assistant `climate` entity that heats.
   *Window open*.
 - **Presets** Comfort, Eco, Frost, Boost; the active one is highlighted.
 - **Room temperature, humidity and valve opening** for each room.
-- **Status bar**: clock, outdoor temperature, a flame while the main heating
-  supply is on, a warning when the central mode is *Stopped* or Home
-  Assistant isn't connected.
+- **Header**: room name on the left; on the right the clock, outdoor
+  temperature, a flame while the main heating supply is on, and warning
+  icons when the central mode is *Stopped* or Home Assistant isn't
+  connected.
 - **Runs on a battery**: dims after 15 s, deep-sleeps after 40 s with the
   backlight held off. A touch or the BOOT button wakes it, and it shows the
   last known values at once (kept in RTC memory) while it reconnects. A

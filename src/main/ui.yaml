@@ -6,32 +6,56 @@ esphome:
   on_boot:
     - priority: -100
       then:
-        # Swipe left = next room, right = previous. Gestures from anything on
-        # a tile bubble up to the tileview and stop there (the dial opts out).
+        # Tiles never scroll (rooms are switched by touch_moved below)
         - lambda: |-
-            // A scrollable tile would start a (tiny, elastic) scroll and
-            // LVGL drops the gesture; tiles never need to scroll.
             for (uint32_t k = 0; k < lv_obj_get_child_count(id(tv_rooms)); k++)
               lv_obj_remove_flag(lv_obj_get_child(id(tv_rooms), k), LV_OBJ_FLAG_SCROLLABLE);
-            lv_obj_add_event_cb(id(tv_rooms), [](lv_event_t *e) {
-              lv_obj_t *tv = (lv_obj_t *) lv_event_get_current_target(e);
-              const lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_active());
-              const int count = (int) lv_obj_get_child_count(tv);
-              int idx = (int) lv_obj_get_index(lv_tileview_get_tile_active(tv));
-              if (dir == LV_DIR_LEFT && idx < count - 1) idx++;
-              else if (dir == LV_DIR_RIGHT && idx > 0) idx--;
-              else return;
-              lv_tileview_set_tile_by_index(tv, idx, 0, LV_ANIM_OFF);
-              lv_obj_send_event(tv, LV_EVENT_VALUE_CHANGED, nullptr);
-            }, LV_EVENT_GESTURE, nullptr);
 
 globals:
+  # Set once a touch has switched rooms; cleared when the next touch starts
+  - id: swipe_done
+    type: bool
+    initial_value: "false"
   # active_brightness as a number, for comparisons in lambdas
   - id: active_brightness_value
     type: float
     initial_value: "${active_brightness_float}"
 
 script:
+  # Swipe detection from the touch controller's coordinates (called by the
+  # touchscreen's on_update with where the touch started and where it is).
+  # 50 px sideways, mostly horizontal: left = next room, right = previous.
+  # The room switches right away, and LVGL drops the press so whatever the
+  # finger started on isn't clicked. Touches starting on the dial's ring
+  # (or its -/+) adjust the target instead.
+  - id: touch_moved
+    parameters:
+      x0: int
+      y0: int
+      x: int
+      y: int
+    then:
+      - lambda: |-
+          if (id(swipe_done)) return;
+          const int dx = x - x0, dy = y - y0;
+          if (abs(dx) < 50 || abs(dx) < 2 * abs(dy)) return;
+          const float rx = x0 - 136, ry = y0 - 150;   // dial centre
+          const float r = sqrtf(rx * rx + ry * ry);
+          if (r > 70 && r < 125) return;               // on the ring
+          id(swipe_done) = true;
+          lv_obj_t *tv = id(tv_rooms);
+          const int count = (int) lv_obj_get_child_count(tv);
+          int idx = (int) lv_obj_get_index(lv_tileview_get_tile_active(tv));
+          const int next = dx < 0 ? idx + 1 : idx - 1;
+          ESP_LOGI("swipe", "from %d,%d dx=%d dy=%d: room %d -> %d", x0, y0, dx, dy, idx, next);
+          if (next < 0 || next >= count) return;
+          for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
+            lv_indev_reset(in, nullptr);
+            lv_indev_wait_release(in);
+          }
+          lv_tileview_set_tile_by_index(tv, next, 0, LV_ANIM_OFF);
+          lv_obj_send_event(tv, LV_EVENT_VALUE_CHANGED, nullptr);
+
   - id: wake_screen
     then:
       - if:
@@ -48,35 +72,30 @@ lvgl:
   color_depth: 16
   bg_color: col_bg
   default_font: font_body
-  # No default LVGL look: flat dark cards everywhere
+  # Outlines on black, solid bright fills for what's active. In 16-bit
+  # colour a dim fill has only a few shades between it and black, so its
+  # rounded corners look stair-stepped; bright edges blend smoothly.
   theme:
     label:
       text_color: col_text
     button:
-      bg_color: col_card
-      bg_opa: COVER
+      bg_color: col_card_hi
+      bg_opa: TRANSP
       text_color: col_text
       radius: 14
-      border_width: 0
+      border_width: 2
+      border_color: col_line
       shadow_width: 0
       pad_all: 6
       pressed:
-        bg_color: col_card_hi
+        bg_opa: COVER
       checked:
-        bg_color: col_heat_soft
-        text_color: col_heat
-        border_width: 2
+        bg_color: col_heat
+        bg_opa: COVER
         border_color: col_heat
+        text_color: col_bg
   style_definitions:
-    - id: st_card
-      bg_color: col_card
-      bg_opa: COVER
-      radius: 14
-      border_width: 0
-      shadow_width: 0
-      pad_all: 8
     - id: st_chip
-      radius: 14
       text_color: col_text2
 
   on_idle:
@@ -104,11 +123,8 @@ lvgl:
             scrollbar_mode: "OFF"
             # No drag-scrolling: every frame of a drag redraws the whole
             # screen over SPI (~6 fps). A swipe switches rooms in one redraw
-            # instead (gesture handler in esphome.on_boot below).
+            # instead (touch_moved above).
             scrollable: false
-            # Gestures bubble up to the first parent without this flag; stop
-            # them here so the handler below gets them (not the screen)
-            gesture_bubble: false
             # Page dots: the current room's dot is a wide bar. on_value: swiped,
             # on_update: selected by the idle timeout.
             on_value: &update_dots
