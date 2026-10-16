@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-1.0.3-orange)
+![Version](https://img.shields.io/badge/version-1.0.4-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -117,12 +117,13 @@ awake (screen on) or in deep sleep (screen off).
   rooms stay empty until Home Assistant is back. After a wake the screen is up in about a
   second with the last values; live data follows in 2–4 s (Wi-Fi with
   `fast_connect` and a fixed IP, then Home Assistant).
-- **Sleep current is mostly the board**, not the ESP32 (~10 µA): the 3.3 V
-  regulator's own draw, the power LED, the USB-serial chip and the
-  charger. Measure it once. If it's several mA, the usual fixes are
-  removing the power LED and swapping the regulator for a low-quiescent
-  one (e.g. ME6211/HT7333); that is the difference between days and months
-  per charge.
+- **Sleep current is mostly the board**, not the ESP32 (~10 µA). Before
+  sleeping, the panel's controller is put to sleep too (display off, sleep
+  in): it has its own picture memory and would otherwise keep driving the
+  LCD (61 mA measured in deep sleep without this, v1.0.3). What remains is
+  the touch controller (kept on for touch wake-up), the 3.3 V regulator's
+  own draw, the USB-serial chip and the charger. The board has no power
+  LED.
 - **Wake reason** (diagnostic sensor in Home Assistant, also in the log):
   touch, BOOT button, power on, RST button, restart/update, crash,
   watchdog or brownout. Wake-ups nobody asked for would show up here.

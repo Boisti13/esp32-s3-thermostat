@@ -9,6 +9,7 @@
 esphome:
   includes:
     - ${project_dir}/src/main/rtc_cache.h
+    - ${project_dir}/src/main/panel_cmd.h
   on_boot:
     # Before the backlight output starts: release the pin held low in sleep
     - priority: 900
@@ -152,6 +153,13 @@ script:
       - light.turn_off: { id: backlight, transition_length: 0s }
       - delay: 50ms
       - lvgl.pause:
+      # Panel to sleep: it keeps its own picture and would keep driving the
+      # LCD while the ESP32 sleeps. Display off (0x28), sleep in (0x10, needs
+      # 120 ms). On wake the driver's start-up sends sleep out and display on.
+      - lambda: "panel_command(id(main_display), 0x28);"
+      - delay: 20ms
+      - lambda: "panel_command(id(main_display), 0x10);"
+      - delay: 120ms
       # Keep the backlight driver off while sleeping (the pin would float)
       - lambda: |-
           gpio_set_direction(GPIO_NUM_1, GPIO_MODE_OUTPUT);

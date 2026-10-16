@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.4 — 2026-10-16
+
+### Fixed
+
+- Deep sleep drew 61 mA: the display controller kept running. It is now
+  sent *display off* and *sleep in* before the ESP32 sleeps.
+
 ## v1.0.3 — 2026-10-16
 
 ### Added
