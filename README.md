@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-1.0.0-orange)
+![Version](https://img.shields.io/badge/version-1.0.1-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -81,7 +81,7 @@ both `mirror_x`/`mirror_y` under the display's `transform:` to `false`.
 
 | Step | |
 |---|---|
-| 1 | Copy `secrets.example.yaml` to `secrets.yaml` and fill in Wi-Fi and a new API key (`openssl rand -base64 32`). In Home Assistant's ESPHome app the shared `secrets.yaml` gets `thermostat_api_key`. |
+| 1 | Copy `secrets.example.yaml` to `secrets.yaml` and fill in Wi-Fi, the panel's fixed IP (reserve it on the router too) and a new API key (`openssl rand -base64 32`). In Home Assistant's ESPHome app the shared `secrets.yaml` gets `thermostat_api_key`. |
 | 2 | Edit `src/main/entities.yaml`: your rooms (name, climate entity, window contact) and the status bar entities. |
 | 3 | Flash once over USB: `esphome run thermostat.yaml`. After that, over Wi-Fi. |
 | 4 | Home Assistant finds the device; add it with the API key. |
@@ -112,10 +112,11 @@ awake (screen on) or in deep sleep (screen off).
 | Dimmed (after `idle_dim_s`) | same, backlight 15 % | ~100 mA |
 | Deep sleep (after *Sleep after*) | ESP32 off, touch controller on | board-dependent, see below |
 
-- **Wake-up**: a touch (GT911 INT on GPIO3) or the BOOT button. After a wake the screen is up in about a
+- **Wake-up**: a touch anywhere (GT911 INT on GPIO3) or the BOOT button.
+  RST works too but is a full restart: the kept values are gone and the
+  rooms stay empty until Home Assistant is back. After a wake the screen is up in about a
   second with the last values; live data follows in 2–4 s (Wi-Fi with
-  `fast_connect`, then Home Assistant). A static IP (`manual_ip` under
-  `wifi:`) saves another second.
+  `fast_connect` and a fixed IP, then Home Assistant).
 - **Sleep current is mostly the board**, not the ESP32 (~10 µA): the 3.3 V
   regulator's own draw, the power LED, the USB-serial chip and the
   charger. Measure it once. If it's several mA, the usual fixes are

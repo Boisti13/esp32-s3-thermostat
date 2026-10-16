@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.1 — 2026-10-16
+
+### Changed
+
+- Fixed IP from `secrets.yaml` (`thermostat_ip`, `thermostat_gateway`,
+  `thermostat_subnet`): no DHCP on each wake, live data about a second
+  sooner. **Add these secrets before updating.**
+
 ## v1.0.0 — 2026-10-16
 
 First release, tested on the Guition JC4827W543C: same firmware as v0.6.0.

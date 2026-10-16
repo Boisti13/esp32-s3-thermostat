@@ -26,7 +26,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "boisti13.esp32-s3-thermostat"
-    version: "1.0.0"
+    version: "1.0.1"
   on_boot:
     - priority: -100
       then:
@@ -53,9 +53,15 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  # Every wake is a fresh boot: skip the scan, keep the radio dozing
+  # Every wake is a fresh boot: skip the scan and DHCP (address reserved
+  # on the router), keep the radio dozing
   fast_connect: true
   power_save_mode: light
+  manual_ip:
+    static_ip: !secret thermostat_ip
+    gateway: !secret thermostat_gateway
+    subnet: !secret thermostat_subnet
+    dns1: !secret thermostat_gateway
   ap:
     ssid: "Thermostat Fallback"
     password: !secret ap_password
