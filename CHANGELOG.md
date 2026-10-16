@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.0.0 — 2026-10-16
+
+First release, tested on the Guition JC4827W543C: same firmware as v0.6.0.
+
+- One tile per room for five Home Assistant climate entities (made for
+  Versatile Thermostat): dial with drag and −/+, presets, heating on/off,
+  room temperature, humidity, valve opening, window warning. Swipe to
+  switch rooms.
+- Header with clock, outdoor temperature, main heating supply, central
+  mode *Stopped* and Home Assistant connection.
+- Settings page (⋯): dark, light or auto mode (by the sun), six colour
+  schemes, brightness, *Sleep after*; all also Home Assistant entities.
+- Battery operation: dims, then deep sleep; wakes on touch or BOOT with the
+  last values on screen. *Stay awake* switch for OTA updates. Optional
+  battery level (needs a resistor divider).
+
 ## v0.6.0 — 2026-10-16
 
 ### Added
