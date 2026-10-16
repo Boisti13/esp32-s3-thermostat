@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.3.0-orange)
+![Version](https://img.shields.io/badge/version-0.3.1-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -16,8 +16,9 @@ but works with any Home Assistant `climate` entity that heats.
 
 ## Highlights
 
-- **One tile per room**, swipe left and right; dots at the bottom show where
-  you are. The home room comes first and comes back when the screen wakes.
+- **One tile per room**: swipe left for the next room, right for the
+  previous; the room switches in one go (no drag animation, which an SPI
+  panel can't draw smoothly). Dots at the bottom show where you are. The home room comes first and comes back when the screen wakes.
 - **Big dial**: drag the knob or tap the ring, or use − / + (hold to repeat),
   in the entity's own steps of 0.5 °C. Sent to Home Assistant when you let
   go, so the dial never fights you.

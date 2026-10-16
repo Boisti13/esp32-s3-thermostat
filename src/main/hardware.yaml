@@ -27,6 +27,7 @@ display:
     id: main_display
     model: JC4827W543   # NV3041A, CS on GPIO45, init sequence built in
     spi_id: display_qspi
+    data_rate: 40MHz    # model default 20 MHz; twice as fast full redraws
     # The board's natural orientation is upside down: turn it 180° in the
     # panel itself (LVGL doesn't allow a display rotation)
     transform:
@@ -53,9 +54,8 @@ touchscreen:
       ignore_strapping_warning: true
       allow_other_uses: true
     reset_pin: GPIO38
-    transform:
-      mirror_x: true
-      mirror_y: true
+    # No transform: the panel's 180° turn (display transform above) already
+    # puts the picture where the touch controller's coordinates are.
     on_release:
       # A touch while the screen is dark only wakes it.
       - if:

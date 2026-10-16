@@ -53,12 +53,12 @@ color:
 
 font:
   # Big target temperature in the dial
-  - file: { type: gfonts, family: Inter, weight: 300 }
+  - file: { type: gfonts, family: Inter, weight: 400 }
     id: font_target
     size: 60
     bpp: 4
     glyphs: "0123456789.-–Of"
-  - file: { type: gfonts, family: Inter, weight: 300 }
+  - file: { type: gfonts, family: Inter, weight: 400 }
     id: font_degree
     size: 30
     bpp: 4

@@ -2,6 +2,25 @@
 # under a fixed status bar (src/main/status_widgets.yaml), dark theme, and
 # the idle behaviour (dim, then dark; a touch wakes it).
 
+esphome:
+  on_boot:
+    - priority: -100
+      then:
+        # Swipe left = next room, right = previous. Gestures from anything on
+        # a tile bubble up to the tileview (the dial opts out).
+        - lambda: |-
+            lv_obj_add_event_cb(id(tv_rooms), [](lv_event_t *e) {
+              lv_obj_t *tv = (lv_obj_t *) lv_event_get_current_target(e);
+              const lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_active());
+              const int count = (int) lv_obj_get_child_count(tv);
+              int idx = (int) lv_obj_get_index(lv_tileview_get_tile_active(tv));
+              if (dir == LV_DIR_LEFT && idx < count - 1) idx++;
+              else if (dir == LV_DIR_RIGHT && idx > 0) idx--;
+              else return;
+              lv_tileview_set_tile_by_index(tv, idx, 0, LV_ANIM_OFF);
+              lv_obj_send_event(tv, LV_EVENT_VALUE_CHANGED, nullptr);
+            }, LV_EVENT_GESTURE, nullptr);
+
 globals:
   # active_brightness as a number, for comparisons in lambdas
   - id: active_brightness_value
@@ -20,7 +39,8 @@ script:
 lvgl:
   displays: [main_display]
   touchscreens: [main_touch]
-  buffer_size: 25%
+  # One whole frame: a room switch goes out in one piece instead of strips
+  buffer_size: 100%
   color_depth: 16
   bg_color: col_bg
   default_font: font_body
@@ -78,6 +98,10 @@ lvgl:
             height: 100%
             bg_opa: TRANSP
             scrollbar_mode: "OFF"
+            # No drag-scrolling: every frame of a drag redraws the whole
+            # screen over SPI (~6 fps). A swipe switches rooms in one redraw
+            # instead (gesture handler in esphome.on_boot below).
+            scrollable: false
             # Page dots: the current room's dot is a wide bar. on_value: swiped,
             # on_update: selected by the idle timeout.
             on_value: &update_dots

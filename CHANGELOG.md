@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.3.1 — 2026-10-16
+
+### Fixed
+
+- Touch was mirrored: taps landed on the opposite side and swiping only
+  worked one way.
+- Swiping was choppy and drew the screen in visible strips: a swipe now
+  switches rooms in a single full-frame redraw.
+
+### Changed
+
+- Display SPI at 40 MHz (was 20), LVGL draws whole frames.
+- Slightly heavier digits in the dial (less jagged on the 128 ppi panel).
+
 ## v0.3.0 — 2026-10-16
 
 ### Changed

@@ -56,6 +56,7 @@ widgets:
       pad_all: 12
       # Dragging on the ring changes the target, it doesn't swipe the room
       scroll_chain_hor: false
+      gesture_bubble: false
       indicator:
         arc_width: 14
         arc_color: col_idle
