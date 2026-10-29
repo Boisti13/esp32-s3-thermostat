@@ -12,8 +12,10 @@ Infrastructure (Home Assistant, servers) is not in this repository.
   computer.
 - **Work on `dev`, commit and push to `dev`.** `main` gets releases only,
   when the owner asks.
-- **Ask before side effects**: pushing, flashing, copying to Home Assistant,
-  changing Home Assistant.
+- **Push and copy to Home Assistant without asking once the compile
+  check passes** (owner, 2026-10-29): push `dev`, then copy to HA as in
+  *Home Assistant copy* below. Still ask before anything else with side
+  effects: flashing, merging to `main`, other changes in Home Assistant.
 - **One change = one commit** with the YAML, the version bump, README and
   CHANGELOG.
 - **The owner flashes.** Never upload to the device unasked.
@@ -39,8 +41,8 @@ read the PNGs before calling the change done.
 
 The ESPHome app builds from `/homeassistant/esphome/esp32-s3-thermostat/`
 (`thermostat.yaml` + `src/`) via the stub
-`/homeassistant/esphome/thermostat-panel.yaml` (sets `project_dir`). Copy a
-new version there only when the owner asks: back up the old folder to
+`/homeassistant/esphome/thermostat-panel.yaml` (sets `project_dir`). Copy every
+new version whose compile check passed (no need to ask): back up the old folder to
 `/config/project-backups/esphome/esp32-s3-thermostat/` first, replace it
 with `git archive <commit> thermostat.yaml src`, check the files match.
 The shared `secrets.yaml` there has `thermostat_api_key`.
