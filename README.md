@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-3.3.1-orange)
+![Version](https://img.shields.io/badge/version-3.4.0-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -55,7 +55,7 @@ controls your Music Assistant speakers too.
 - **Library** (button on the cover's corner, or tap the cover): pick something to play
   from Music Assistant — audiobooks, playlists, albums, tracks or radio,
   most recently played first, four per page
-  (title, and the artist below it). Plays on the selected
+  (title, and the artist below it); swipe up or down for more. Plays on the selected
   speaker. A paused track (Music Assistant reports it as *idle*) keeps its
   title and cover.
 - **Several speakers**: tap the speaker name to pick which of up to four

@@ -1,6 +1,7 @@
 # Library: pick something to play. Opened with the list button on the music
 # page; lists Music Assistant's library by category (chips at the top),
-# most recently played first, four titles per page (‹ › to page). Tapping a
+# most recently played first, four titles per page (swipe up / down or
+# ‹ › for more). Tapping a
 # title plays it on the selected speaker. The lists come from Music
 # Assistant's music_assistant.get_library action, whose answer Home
 # Assistant sends back to the panel (src/music/library_page.yaml has the
@@ -78,6 +79,7 @@ script:
           lv_obj_remove_flag(id(lib_status_lbl), LV_OBJ_FLAG_HIDDEN);
           lv_obj_add_state(id(lib_prev), LV_STATE_DISABLED);
           lv_obj_add_state(id(lib_next), LV_STATE_DISABLED);
+          lv_label_set_text(id(lib_page_lbl), id(lib_page) ? str_sprintf("Page %d", id(lib_page) + 1).c_str() : "");
       - homeassistant.action:
           action: music_assistant.get_library
           data:

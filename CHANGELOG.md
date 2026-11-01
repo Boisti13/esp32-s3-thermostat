@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.4.0 — 2026-11-01
+
+### Added
+
+- Library: swipe up for the next titles, down for the previous ones (a
+  page at a time, in one redraw; dragging would be too slow on this
+  panel). "Page 2" etc. next to the title.
+
 ## v3.3.1 — 2026-11-01
 
 ### Fixed

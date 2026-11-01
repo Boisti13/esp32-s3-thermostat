@@ -24,7 +24,9 @@ script:
   # 50 px sideways, mostly horizontal: left = next room, right = previous.
   # The room switches right away, and LVGL drops the press so whatever the
   # finger started on isn't clicked. The dial ignores touch, so a swipe
-  # may start anywhere on it.
+  # may start anywhere on it. In the library, 40 px up or down = next or
+  # previous page of titles (its "scrolling": one redraw instead of a slow
+  # drag).
   - id: touch_moved
     parameters:
       x0: int
@@ -33,8 +35,22 @@ script:
       y: int
     then:
       - lambda: |-
-          if (id(swipe_done) || lv_screen_active() != id(page_main)->obj) return;
+          if (id(swipe_done)) return;
           const int dx = x - x0, dy = y - y0;
+          auto drop_press = []() {
+            for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
+              lv_indev_reset(in, nullptr);
+              lv_indev_wait_release(in);
+            }
+          };
+          if (lv_screen_active() == id(page_library)->obj) {
+            if (abs(dy) < 40 || abs(dy) < 2 * abs(dx)) return;
+            id(swipe_done) = true;
+            drop_press();
+            id(library_turn).execute(dy < 0 ? 1 : -1);
+            return;
+          }
+          if (lv_screen_active() != id(page_main)->obj) return;
           if (abs(dx) < 50 || abs(dx) < 2 * abs(dy)) return;
           id(swipe_done) = true;
           lv_obj_t *tv = id(tv_rooms);
@@ -43,10 +59,7 @@ script:
           const int next = dx < 0 ? idx + 1 : idx - 1;
           ESP_LOGI("swipe", "from %d,%d dx=%d dy=%d: room %d -> %d", x0, y0, dx, dy, idx, next);
           if (next < 0 || next >= count) return;
-          for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
-            lv_indev_reset(in, nullptr);
-            lv_indev_wait_release(in);
-          }
+          drop_press();
           lv_tileview_set_tile_by_index(tv, next, 0, LV_ANIM_OFF);
           lv_obj_send_event(tv, LV_EVENT_VALUE_CHANGED, nullptr);
 

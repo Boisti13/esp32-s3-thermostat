@@ -1,5 +1,6 @@
 # The library page (list button on the music page; ‹ goes back there),
-# filled in by src/music/library.yaml.
+# filled in by src/music/library.yaml. Swipe up / down for the next /
+# previous titles (src/main/ui.yaml), or use ‹ ›.
 #
 #  ┌──────────────────────────────────────────────┐
 #  │ ‹ Library                      ☁ 9.5°  17:07 │
@@ -30,6 +31,14 @@ widgets:
       text: "Library"
       text_font: font_title
       text_color: col_text
+  # "Page 2" from the second page on
+  - label:
+      id: lib_page_lbl
+      x: 126
+      y: 12
+      text: ""
+      text_font: font_small
+      text_color: col_text2
 
   # Categories; the current one is filled
   - button: &cat_chip
