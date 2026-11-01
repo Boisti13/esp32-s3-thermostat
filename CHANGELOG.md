@@ -1,5 +1,124 @@
 # Changelog
 
+## v3.3.1 — 2026-11-01
+
+### Fixed
+
+- Library rows were unreadable: long names wrapped over two or three lines
+  and ran into each other. Each row is now one line of title and one of
+  artist (grey), cut off with "…", four rows per page; titles without an
+  artist sit centred. Fullwidth bars (｜, common in video titles) show as
+  normal bars instead of an empty box.
+
+### Changed
+
+- Music page: the album line is gone (for downloaded audiobooks it held
+  the source URL, and it wrapped); title and artist only, the artist on
+  one line.
+
+## v3.3.0 — 2026-11-01
+
+### Changed
+
+- The heating dial no longer reacts to touch (no dragging the knob or
+  tapping the ring): the target is set with − / + only. Swipes to the
+  next room now work from anywhere on the dial too.
+
+### Fixed
+
+- A touch on the dimmed screen pressed whatever was under the finger; now
+  it only brightens the screen.
+- Library stayed empty: Home Assistant wraps the action's answer in
+  `{"response": …}`, and the panel looked for the titles one level too
+  high.
+- − / + sit 10 px higher, clear of the page dots.
+
+## v3.2.2 — 2026-11-01
+
+### Fixed
+
+- Volume popup: the speaker icon sat off the line of the level; icon and
+  level are now centred on each other.
+
+## v3.2.1 — 2026-11-01
+
+### Changed
+
+- The volume button is a small round icon button (the icon shows the
+  level) instead of a wide bar; the level is in the popup.
+
+## v3.2.0 — 2026-11-01
+
+### Changed
+
+- Music page less cramped: the volume slider is gone; one volume button
+  opens a popup with − / + (5 % steps, hold to repeat) and mute, closing
+  4 s after the last tap. The library button sits on the cover's corner
+  (tapping the cover opens it too), and the playback controls moved down
+  into the bottom row.
+
+### Fixed
+
+- Library stayed empty ("expected int at 'offset'"): ESPHome sends action
+  data as text; `limit` and `offset` now go through a template so Home
+  Assistant passes numbers.
+
+## v3.1.0 — 2026-11-01
+
+### Changed
+
+- Waking from sleep returns to the page and room the panel was showing
+  (room, music page or settings; the library comes back as the music
+  page) instead of the home room. Kept in RTC memory with the other
+  values; after a power-up it still starts on the home room.
+
+## v3.0.1 — 2026-11-01
+
+### Fixed
+
+- No cover: Music Assistant's image proxy only serves 0, 80, 160, 256,
+  512 and 1024 px and answered 150 px with an error. The panel asks for
+  160 px and scales it to 150.
+
+## v3.0.0 — 2026-11-01
+
+Needs the new `music_assistant_entry` setting in `src/main/entities.yaml`.
+
+### Added
+
+- **Library** (list button on the music page): pick an audiobook,
+  playlist, album, track or radio station from Music Assistant, most
+  recently played first, five per page; it plays on the selected speaker.
+
+### Fixed
+
+- Pausing showed *Nothing playing* and dropped the cover: Music
+  Assistant's Sendspin players report a paused track as `idle`. A player
+  that is idle with a title now counts as paused, and a cover that
+  vanishes for a moment while the state changes is kept.
+
+## v2.0.0 — 2026-11-01
+
+Needs the new `music_N_entity` and `ha_url` settings in
+`src/main/entities.yaml`.
+
+### Added
+
+- **Music page**, opened with the ♫ button bottom left of every room (orange
+  while something plays): cover art, title, artist, album, a seekable
+  progress bar, shuffle, previous, play/pause, next, repeat, volume and
+  mute for a Music Assistant (or any) media player. Titles show umlauts and
+  accents. The cover is downloaded only while the page is open.
+- **Speaker list** (tap the speaker name): pick which of up to four players
+  the page controls, and join other speakers to it so they play in sync
+  (`media_player.join` / `unjoin`).
+
+### Under the hood
+
+- New `src/music/` (logic, page, one include per player slot); the demo
+  shows the music page with made-up speakers and a generated cover, and
+  the screenshot script renders it.
+
 ## v1.1.2 — 2026-10-16
 
 ### Fixed

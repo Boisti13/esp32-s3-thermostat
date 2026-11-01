@@ -177,6 +177,19 @@ interval:
           if (ms && idle >= ms) id(idle_sleep).execute();
 
 script:
+  # A touch: while the screen is dimmed it only brightens it. LVGL drops
+  # the press (no button fires) and it doesn't count as a swipe.
+  - id: touch_wake
+    then:
+      - lambda: |-
+          if (!id(ui_ready) || !id(dimmed)) return;
+          id(swipe_done) = true;
+          for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
+            lv_indev_reset(in, nullptr);
+            lv_indev_wait_release(in);
+          }
+      - script.execute: wake_screen
+
   # Back to full brightness on a touch
   - id: wake_screen
     then:
@@ -193,7 +206,8 @@ script:
   - id: apply_scheme
     then:
       - lambda: |-
-          lv_obj_t *roots[] = {lv_layer_top(), id(page_main)->obj, id(page_settings)->obj};
+          lv_obj_t *roots[] = {lv_layer_top(), id(page_main)->obj, id(page_settings)->obj, id(page_music)->obj,
+                               id(page_library)->obj};
           if (!id(look_ready)) {
             for (lv_obj_t *r : roots) panel_localize(r);
             id(look_ready) = true;
@@ -226,6 +240,10 @@ script:
             id(r4_p0), id(r4_p1), id(r4_p2), id(r4_p3), id(r4_power),
             id(set_sleep_0), id(set_sleep_1), id(set_sleep_2), id(set_sleep_3),
             id(set_mode_0), id(set_mode_1), id(set_mode_2),
+            id(mus_shuffle), id(mus_repeat),
+            id(mus_pick_0), id(mus_pick_1), id(mus_pick_2), id(mus_pick_3),
+            id(mus_join_0), id(mus_join_1), id(mus_join_2), id(mus_join_3),
+            id(lib_cat_0), id(lib_cat_1), id(lib_cat_2), id(lib_cat_3), id(lib_cat_4),
           };
           for (lv_obj_t *b : btns) {
             lv_obj_set_style_bg_color(b, heat, LV_PART_MAIN | LV_STATE_CHECKED);
@@ -233,6 +251,7 @@ script:
           }
           lv_obj_set_style_text_color(id(lbl_main_valve), heat, 0);
           lv_obj_set_style_bg_color(id(set_brightness_slider), heat, LV_PART_INDICATOR);
+          lv_obj_set_style_bg_color(id(mus_play), heat, LV_PART_MAIN);
           lv_obj_set_style_bg_color(id(set_touch_wake), heat, LV_PART_INDICATOR | LV_STATE_CHECKED);
           // Swatches show their own scheme; the current one gets a ring
           lv_obj_t *sw[] = {id(set_scheme_0), id(set_scheme_1), id(set_scheme_2),
@@ -254,6 +273,7 @@ script:
       - script.execute: refresh_r3
       - script.execute: refresh_r4
       - script.execute: refresh_settings
+      - script.execute: refresh_music
 
   # Settings page controls from the current settings
   - id: refresh_settings
@@ -291,7 +311,7 @@ script:
 
   - id: show_settings
     then:
-      - lvgl.widget.hide: [btn_menu, dots_row]
+      - lvgl.widget.hide: [btn_menu, btn_music, dots_row]
       - lvgl.page.show:
           id: page_settings
           animation: NONE
@@ -302,4 +322,4 @@ script:
       - lvgl.page.show:
           id: page_main
           animation: NONE
-      - lvgl.widget.show: [btn_menu, dots_row]
+      - lvgl.widget.show: [btn_menu, btn_music, dots_row]

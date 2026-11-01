@@ -1,0 +1,90 @@
+# One media player for the music page: what Home Assistant reports about it.
+# thermostat.yaml includes this once per player slot with the vars
+#   p       slot 0-3 (prefix of every ID: m<p>_...)
+#   entity  media player, media_player.none for an unused slot
+# Changes redraw the page if this is the selected player, and the ♫ button
+# and the speaker list always.
+
+text_sensor:
+  - platform: homeassistant
+    id: m${p}_state
+    entity_id: ${entity}
+    internal: true
+    on_value: { script.execute: { id: music_changed, p: "${p}" } }
+  - platform: homeassistant
+    id: m${p}_name
+    entity_id: ${entity}
+    attribute: friendly_name
+    internal: true
+    on_value: { script.execute: { id: music_changed, p: "${p}" } }
+  - platform: homeassistant
+    id: m${p}_title
+    entity_id: ${entity}
+    attribute: media_title
+    internal: true
+    on_value: { script.execute: { id: music_changed, p: "${p}" } }
+  - platform: homeassistant
+    id: m${p}_artist
+    entity_id: ${entity}
+    attribute: media_artist
+    internal: true
+    on_value: { script.execute: { id: music_changed, p: "${p}" } }
+  - platform: homeassistant
+    id: m${p}_picture
+    entity_id: ${entity}
+    attribute: entity_picture
+    internal: true
+    on_value: { script.execute: load_cover }
+  - platform: homeassistant
+    id: m${p}_position_at
+    entity_id: ${entity}
+    attribute: media_position_updated_at
+    internal: true
+    on_value: { script.execute: { id: music_changed, p: "${p}" } }
+  # Players grouped with this one (Music Assistant: a list of entity IDs)
+  - platform: homeassistant
+    id: m${p}_group
+    entity_id: ${entity}
+    attribute: group_members
+    internal: true
+    on_value: { script.execute: { id: music_changed, p: "${p}" } }
+  - platform: homeassistant
+    id: m${p}_repeat
+    entity_id: ${entity}
+    attribute: repeat
+    internal: true
+    on_value: { script.execute: { id: music_changed, p: "${p}" } }
+
+sensor:
+  - platform: homeassistant
+    id: m${p}_volume
+    entity_id: ${entity}
+    attribute: volume_level
+    internal: true
+    on_value: { script.execute: { id: music_changed, p: "${p}" } }
+  - platform: homeassistant
+    id: m${p}_duration
+    entity_id: ${entity}
+    attribute: media_duration
+    internal: true
+    on_value: { script.execute: { id: music_changed, p: "${p}" } }
+  - platform: homeassistant
+    id: m${p}_position
+    entity_id: ${entity}
+    attribute: media_position
+    internal: true
+    on_value: { script.execute: { id: music_changed, p: "${p}" } }
+
+binary_sensor:
+  - platform: homeassistant
+    id: m${p}_shuffle
+    entity_id: ${entity}
+    attribute: shuffle
+    internal: true
+    on_state: { script.execute: { id: music_changed, p: "${p}" } }
+  - platform: homeassistant
+    id: m${p}_muted
+    entity_id: ${entity}
+    attribute: is_volume_muted
+    internal: true
+    on_state: { script.execute: { id: music_changed, p: "${p}" } }

@@ -9,6 +9,9 @@ substitutions:
   project_dir: ".."
   device_name: thermostat-demo
   friendly_name: Thermostat Demo
+  # Two more (made-up) speakers for the speaker list
+  music_1_entity: media_player.demo_kitchen
+  music_2_entity: media_player.demo_bedroom
 
 packages:
   entities: !include ../src/main/entities.yaml
@@ -16,6 +19,12 @@ packages:
   status: !include ../src/main/status.yaml
   ui: !include ../src/main/ui.yaml
   settings: !include ../src/main/settings.yaml
+  music: !include ../src/music/music.yaml
+  library: !include ../src/music/library.yaml
+  music_0: !include { file: ../src/music/player.yaml, vars: { p: "0", entity: "${music_0_entity}" } }
+  music_1: !include { file: ../src/music/player.yaml, vars: { p: "1", entity: "${music_1_entity}" } }
+  music_2: !include { file: ../src/music/player.yaml, vars: { p: "2", entity: "${music_2_entity}" } }
+  music_3: !include { file: ../src/music/player.yaml, vars: { p: "3", entity: "${music_3_entity}" } }
   room_0: !include { file: ../src/room/room.yaml, vars: { i: "0", entity: "${room_0_entity}", window: "${room_0_window}" } }
   room_1: !include { file: ../src/room/room.yaml, vars: { i: "1", entity: "${room_1_entity}", window: "${room_1_window}" } }
   room_2: !include { file: ../src/room/room.yaml, vars: { i: "2", entity: "${room_2_entity}", window: "${room_2_window}" } }
@@ -59,9 +68,37 @@ esphome:
             id(main_valve).publish_state(true);
             id(central_mode).publish_state("Heat only");
             id(force_connected) = true;
+            // Music: made-up speakers and track, generated cover (demo/cover.png)
+            id(m0_state).publish_state("playing");
+            id(m0_name).publish_state("Living Room Speaker");
+            id(m0_title).publish_state("Morgenlicht über dem Fluss");
+            id(m0_artist).publish_state("Example Ensemble");
+            id(m0_duration).publish_state(245);
+            id(m0_position).publish_state(97);
+            id(m0_volume).publish_state(0.42);
+            id(m0_shuffle).publish_state(true);
+            id(m0_repeat).publish_state("off");
+            id(m0_muted).publish_state(false);
+            id(m0_group).publish_state("['media_player.living_room_speaker', 'media_player.demo_bedroom']");
+            id(m1_state).publish_state("paused");
+            id(m1_name).publish_state("Kitchen Speaker");
+            id(m1_title).publish_state("Café am Marktplatz");
+            id(m2_state).publish_state("playing");
+            id(m2_title).publish_state("Morgenlicht über dem Fluss");
+            id(m2_name).publish_state("Bedroom Speaker");
+            id(music_cover_fixed) = true;
+        - lvgl.image.update: { id: mus_art, src: demo_cover }
+        - lvgl.widget.show: mus_art
+        - lvgl.widget.hide: mus_art_none
         - script.execute: refresh_status
 
 host:
+
+image:
+  - platform: file
+    file: cover.png
+    id: demo_cover
+    type: RGB565
 
 logger:
   level: INFO
@@ -104,6 +141,31 @@ light:
 
 # The board deep-sleeps here (src/main/power.yaml); the demo only goes dark
 script:
+  # Library with made-up titles (no Music Assistant to ask)
+  - id: demo_library
+    then:
+      - script.execute: show_library
+      - delay: 300ms
+      - lambda: |-
+          static const char *const T[4] = {"Morgenlicht über dem Fluss", "Café am Marktplatz",
+                                           "A Very Long Title That Does Not Fit On One Line Of The Panel At All",
+                                           "Sommerregen"};
+          static const char *const A[4] = {"Example Ensemble", "", "The Placeholder Orchestra", "Example Ensemble"};
+          lv_obj_t *rows[4] = {id(lib_row_0), id(lib_row_1), id(lib_row_2), id(lib_row_3)};
+          lv_obj_t *names[4] = {id(lib_name_0), id(lib_name_1), id(lib_name_2), id(lib_name_3)};
+          lv_obj_t *infos[4] = {id(lib_info_0), id(lib_info_1), id(lib_info_2), id(lib_info_3)};
+          lv_obj_set_state(id(lib_cat_0), LV_STATE_CHECKED, false);
+          lv_obj_set_state(id(lib_cat_3), LV_STATE_CHECKED, true);
+          for (int k = 0; k < 4; k++) {
+            lv_label_set_text(names[k], T[k]);
+            lv_label_set_text(infos[k], A[k]);
+            lv_obj_set_y(names[k], *A[k] ? -9 : 0);
+            if (*A[k]) lv_obj_remove_flag(infos[k], LV_OBJ_FLAG_HIDDEN);
+            else lv_obj_add_flag(infos[k], LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(rows[k], LV_OBJ_FLAG_HIDDEN);
+          }
+          lv_obj_add_flag(id(lib_status_lbl), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_remove_state(id(lib_next), LV_STATE_DISABLED);
   - id: idle_sleep
     then:
       - globals.set: { id: dimmed, value: "true" }
@@ -111,23 +173,29 @@ script:
       - lvgl.pause:
 
 # Show each room in turn, then the settings page, room 0 in the Ocean
-# scheme, and room 0 and the settings page in light mode (for the
-# screenshot script)
+# scheme, room 0 and the settings page in light mode, and the music page
+# in dark and light mode, the speaker list, the library and the volume popup (for the screenshot
+# script)
 interval:
   - interval: 3s
     then:
       - lambda: |-
           static int n = -1;   // first run (at boot) shows room 0
-          n = (n + 1) % 9;
+          n = (n + 1) % 14;
           auto scheme = [](const char *name) { id(color_scheme).make_call().set_option(name).perform(); };
           auto mode = [](const char *name) { id(appearance).make_call().set_option(name).perform(); };
           int tile = n;
           switch (n) {
-            case 0: mode("Dark"); scheme("Ember"); break;
+            case 0: lv_obj_add_flag(id(mus_picker), LV_OBJ_FLAG_HIDDEN); id(show_rooms).execute(); mode("Dark"); scheme("Ember"); break;
             case 5: id(show_settings).execute(); return;
             case 6: id(show_rooms).execute(); scheme("Ocean"); tile = 0; break;
             case 7: scheme("Ember"); mode("Light"); tile = 0; break;
             case 8: id(show_settings).execute(); return;
+            case 9: id(show_music).execute(); return;
+            case 10: mode("Dark"); return;
+            case 11: id(show_music_picker).execute(); return;
+            case 12: id(demo_library).execute(); return;
+            case 13: id(show_music).execute(); id(music_volume_popup).execute(); return;
           }
           lv_obj_t *tiles[5] = {id(tile_r0), id(tile_r1), id(tile_r2), id(tile_r3), id(tile_r4)};
           lv_tileview_set_tile(id(tv_rooms), tiles[tile], LV_ANIM_OFF);

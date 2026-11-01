@@ -2,8 +2,9 @@
 # so nothing is gained by staying half-awake. Instead:
 # dim after a few seconds, then deep sleep after "Sleep after" (a setting)
 # with the backlight held off. A touch (GT911 INT on GPIO3) or the
-# BOOT button wakes it; it boots straight into the last known values (kept
-# in RTC memory) and updates them once Home Assistant is connected.
+# BOOT button wakes it; it boots straight into the last known values and
+# the page and room it was showing (kept in RTC memory) and updates them
+# once Home Assistant is connected.
 # The "Stay awake" switch keeps it awake (for OTA updates, or on USB power).
 
 esphome:
@@ -76,6 +77,18 @@ esphome:
             if (panel_cache.central[0]) id(central_mode).publish_state(panel_cache.central);
             id(sun_up) = panel_cache.sun_up;   // Auto mode starts in the right mode
         - script.execute: refresh_status
+    # After the UI is set up (priority -100): back to the page and room it
+    # was showing when it went to sleep
+    - priority: -200
+      then:
+        - lambda: |-
+            if (panel_cache.magic != PANEL_CACHE_MAGIC) return;
+            if (panel_cache.tile < 5) {
+              lv_tileview_set_tile_by_index(id(tv_rooms), panel_cache.tile, 0, LV_ANIM_OFF);
+              lv_obj_send_event(id(tv_rooms), LV_EVENT_VALUE_CHANGED, nullptr);
+            }
+            if (panel_cache.page == PANEL_PAGE_MUSIC) id(show_music).execute();
+            else if (panel_cache.page == PANEL_PAGE_SETTINGS) id(show_settings).execute();
 
 # Each wake is a reboot that lasts under a minute; with the default
 # (boot_is_good_after: 1min) ten sleep cycles would put it in safe mode.
@@ -130,11 +143,10 @@ script:
           condition:
             switch.is_on: stay_awake
           then:
-            # Awake on purpose: just darken the screen; a touch brings it back
+            # Awake on purpose: just darken the screen; a touch brings it
+            # back where it was
             - globals.set: { id: dimmed, value: "true" }
             - light.turn_off: backlight
-            - script.execute: show_rooms
-            - lvgl.tileview.select: { id: tv_rooms, tile_id: tile_r0, animated: false }
             - lvgl.pause:
           else:
             - script.execute: enter_sleep
@@ -211,4 +223,10 @@ script:
           panel_cache.main_valve = id(main_valve).has_state() && id(main_valve).state;
           cache_copy(panel_cache.central, sizeof(panel_cache.central), id(central_mode).state);
           panel_cache.sun_up = id(sun_up);
+          // Page and room on screen (the library comes back as the music page)
+          lv_obj_t *scr = lv_screen_active();
+          panel_cache.page = scr == id(page_settings)->obj                                   ? PANEL_PAGE_SETTINGS
+                             : scr == id(page_music)->obj || scr == id(page_library)->obj ? PANEL_PAGE_MUSIC
+                                                                                          : PANEL_PAGE_ROOMS;
+          panel_cache.tile = (uint8_t) lv_obj_get_index(lv_tileview_get_tile_active(id(tv_rooms)));
           panel_cache.magic = PANEL_CACHE_MAGIC;

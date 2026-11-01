@@ -14,6 +14,19 @@
     on_click:
       - script.execute: show_settings
 
+# ♫ bottom left (below the dial): the music page; accent while playing
+- button:
+    id: btn_music
+    x: 4
+    y: 226
+    width: 44
+    height: 42
+    border_width: 0
+    widgets:
+      - label: { id: btn_music_icon, align: CENTER, text: "${ic_music}", text_font: font_icon, text_color: col_text2 }
+    on_click:
+      - script.execute: show_music
+
 # Top right, icons only so it never runs into the room name on the left:
 # [central stopped] [no connection] [flame] [battery] [outdoor] [clock]
 - obj:

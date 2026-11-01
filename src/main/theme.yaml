@@ -43,6 +43,24 @@ substitutions:
   ic_battery_50: "\U000F007E"
   ic_battery_20: "\U000F007B"
   ic_battery_alert: "\U000F10CD"
+  ic_music: "\U000F075A"
+  ic_music_note: "\U000F0387"
+  ic_play: "\U000F040A"
+  ic_pause: "\U000F03E4"
+  ic_skip_previous: "\U000F04AE"
+  ic_skip_next: "\U000F04AD"
+  ic_shuffle: "\U000F049D"
+  ic_repeat: "\U000F0456"
+  ic_repeat_once: "\U000F0458"
+  ic_volume_high: "\U000F057E"
+  ic_volume_medium: "\U000F0580"
+  ic_volume_low: "\U000F057F"
+  ic_volume_off: "\U000F0581"
+  ic_speaker: "\U000F04C3"
+  ic_menu_down: "\U000F035D"
+  ic_check: "\U000F012C"
+  ic_library: "\U000F0CB8"   # playlist-music
+  ic_forward: "\U000F0142"   # chevron-right
 
   text_glyphs: " !#%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz|°·–"
 
@@ -89,7 +107,9 @@ font:
       - file: ${project_dir}/src/assets/fonts/materialdesignicons-webfont.ttf
         glyphs: ["${ic_fire}", "${ic_thermometer}", "${ic_water}", "${ic_valve}",
                  "${ic_cloud}", "${ic_stop}", "${ic_offline}", "${ic_power}", "${ic_window}",
-                 "${ic_battery}", "${ic_battery_50}", "${ic_battery_20}", "${ic_battery_alert}"]
+                 "${ic_battery}", "${ic_battery_50}", "${ic_battery_20}", "${ic_battery_alert}",
+                 "${ic_speaker}", "${ic_menu_down}", "${ic_back}", "${ic_forward}",
+                 "${ic_volume_high}", "${ic_volume_medium}", "${ic_volume_low}", "${ic_volume_off}"]
   # Big values on the stat tiles
   - file: { type: gfonts, family: Inter, weight: 600 }
     id: font_value
@@ -112,4 +132,39 @@ font:
     bpp: 4
     glyphs: ["${ic_sofa}", "${ic_leaf}", "${ic_snowflake}", "${ic_rocket}", "${ic_power}",
              "${ic_plus}", "${ic_minus}", "${ic_menu}", "${ic_back}",
-             "${ic_sun}", "${ic_moon}", "${ic_auto}"]
+             "${ic_sun}", "${ic_moon}", "${ic_auto}",
+             "${ic_music}", "${ic_skip_previous}", "${ic_skip_next}", "${ic_shuffle}",
+             "${ic_repeat}", "${ic_repeat_once}", "${ic_speaker}", "${ic_check}",
+             "${ic_volume_high}", "${ic_volume_medium}", "${ic_volume_low}", "${ic_volume_off}",
+             "${ic_library}"]
+  # Play/pause and the empty cover on the music page
+  - file: ${project_dir}/src/assets/fonts/materialdesignicons-webfont.ttf
+    id: font_icon_big
+    size: 40
+    bpp: 4
+    glyphs: ["${ic_play}", "${ic_pause}", "${ic_music_note}"]
+  # Track title, artist and album: any Latin text (umlauts, accents)
+  - file: { type: gfonts, family: Inter, weight: 600 }
+    id: font_music_title
+    size: 22
+    bpp: 4
+    glyphsets: [GF_Latin_Core]
+    glyphs: "${text_glyphs}"
+    ignore_missing_glyphs: true
+  - file: { type: gfonts, family: Inter, weight: 500 }
+    id: font_music_body
+    size: 16
+    bpp: 4
+    glyphsets: [GF_Latin_Core]
+    glyphs: "${text_glyphs}"
+    ignore_missing_glyphs: true
+  - file: { type: gfonts, family: Inter, weight: 500 }
+    id: font_music_small
+    size: 13
+    bpp: 4
+    glyphsets: [GF_Latin_Core]
+    glyphs: "${text_glyphs}"
+    ignore_missing_glyphs: true
+    extras:
+      - file: ${project_dir}/src/assets/fonts/materialdesignicons-webfont.ttf
+        glyphs: ["${ic_play}", "${ic_pause}"]

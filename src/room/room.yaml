@@ -112,7 +112,7 @@ script:
           // Colour of the dial: orange heating, blue on, grey off
           const uint32_t accent = !on ? pal(0x${hex_off}) : heating ? id(accent_heat) : id(accent_idle);
           lv_obj_t *arc = id(r${i}_arc);
-          if (!lv_obj_has_state(arc, LV_STATE_PRESSED)) lv_arc_set_value(arc, t2);
+          lv_arc_set_value(arc, t2);
           lv_obj_set_style_arc_color(arc, lv_color_hex(accent), LV_PART_INDICATOR);
           lv_obj_set_style_bg_color(arc, lv_color_hex(accent), LV_PART_KNOB);
           if (on) lv_obj_remove_state(arc, LV_STATE_DISABLED);

@@ -1,0 +1,437 @@
+# The music page (opened with ♫ bottom left of a room, closed with ‹),
+# filled in by refresh_music in src/music/music.yaml. The speaker pill in
+# the header opens the speaker list (mus_picker, at the end).
+#
+#  ┌──────────────────────────────────────────────┐
+#  │ ‹ Music (🔈 Living Room Speaker ▾) ☁ 9.5° 17:07│
+#  │ ┌──────────┐  Der finstere Rivale            │
+#  │ │          │  Die Drei Fragezeichen          │
+#  │ │  cover   │                                 │
+#  │ │          │  ━━━━━━━●────────────────       │
+#  │ └───────(☰)   12:04                 1:00:40  │
+#  │ (🔉)            ⤨    ⏮   (▶)   ⏭    🔁      │
+#  └──────────────────────────────────────────────┘
+
+id: page_music
+bg_color: col_bg
+scrollable: false
+widgets:
+  - button:
+      id: mus_back
+      x: 4
+      y: 2
+      width: 40
+      height: 34
+      border_width: 0
+      widgets:
+        - label: { align: CENTER, text: "${ic_back}", text_font: font_icon, text_color: col_text }
+      on_click:
+        - script.execute: show_rooms
+  - label:
+      x: 46
+      y: 6
+      text: "Music"
+      text_font: font_title
+      text_color: col_text
+  # Speaker pill: opens the list
+  - button:
+      id: mus_player_btn
+      x: 110
+      y: 5
+      width: 214
+      height: 28
+      radius: 14
+      border_width: 1
+      pad_all: 0
+      widgets:
+        - label: { align: LEFT_MID, x: 10, text: "${ic_speaker}", text_font: font_body, text_color: col_text2 }
+        - label:
+            id: mus_player_lbl
+            align: LEFT_MID
+            x: 32
+            width: 136
+            height: 17
+            long_mode: DOT
+            text: ""
+            text_font: font_music_small
+            text_color: col_text
+        # "+1" while other speakers are joined
+        - label: { id: mus_player_count, align: RIGHT_MID, x: -28, text: "", text_font: font_music_small, text_color: col_heat }
+        - label: { align: RIGHT_MID, x: -6, text: "${ic_menu_down}", text_font: font_body, text_color: col_text2 }
+      on_click:
+        - script.execute: show_music_picker
+
+  # Cover, or an outlined note while there is none; tap for the library
+  - obj:
+      id: mus_art_none
+      x: 14
+      y: 44
+      width: 150
+      height: 150
+      radius: 16
+      bg_opa: TRANSP
+      border_width: 2
+      border_color: col_line
+      pad_all: 0
+      scrollable: false
+      widgets:
+        - label: { align: CENTER, text: "${ic_music_note}", text_font: font_icon_big, text_color: col_text2 }
+      on_click:
+        - script.execute: show_library
+  - image:
+      id: mus_art
+      x: 14
+      y: 44
+      src: music_cover
+      radius: 16
+      clip_corner: true
+      clickable: true
+      hidden: true
+      on_click:
+        - script.execute: show_library
+  # Library badge on the cover's corner (src/music/library_page.yaml)
+  - button:
+      id: mus_library
+      x: 128
+      y: 158
+      width: 44
+      height: 44
+      radius: 22
+      bg_color: col_bg
+      bg_opa: COVER
+      pad_all: 0
+      widgets:
+        - label: { align: CENTER, text: "${ic_library}", text_font: font_icon }
+      on_click:
+        - script.execute: show_library
+
+  # Track
+  - label:
+      id: mus_title_lbl
+      x: 186
+      y: 52
+      width: 280
+      height: 56
+      long_mode: DOT
+      text: "Nothing playing"
+      text_font: font_music_title
+      text_color: col_text
+  - label:
+      id: mus_artist_lbl
+      x: 186
+      y: 116
+      width: 280
+      height: 20
+      long_mode: DOT
+      text: ""
+      text_font: font_music_body
+      text_color: col_heat
+
+  # Progress; drag to seek
+  - slider:
+      id: mus_progress
+      x: 192
+      y: 160
+      width: 268
+      height: 4
+      min_value: 0
+      max_value: 100
+      value: 0
+      bg_color: col_track
+      bg_opa: COVER
+      radius: 2
+      indicator:
+        bg_color: col_text
+        radius: 2
+      knob:
+        bg_color: col_text
+        pad_all: 4
+        radius: 8
+      on_release:
+        - script.execute: music_seek
+  - obj:
+      x: 186
+      y: 170
+      width: 280
+      height: 18
+      bg_opa: TRANSP
+      border_width: 0
+      pad_all: 0
+      clickable: false
+      scrollable: false
+      widgets:
+        - label: { id: mus_elapsed_lbl, align: LEFT_MID, text: "", text_font: font_small, text_color: col_text2 }
+        - label: { id: mus_total_lbl, align: RIGHT_MID, text: "", text_font: font_small, text_color: col_text2 }
+
+  # Bottom row, centred on y 236: volume button under the cover, playback
+  # controls under the track (shuffle, previous, play/pause, next, repeat).
+  # The volume button opens the volume popup (end of this file).
+  - button:
+      id: mus_volume
+      x: 14
+      y: 216
+      width: 40
+      height: 40
+      radius: 20
+      pad_all: 0
+      widgets:
+        - label: { id: mus_volume_lbl, align: CENTER, text: "${ic_volume_medium}", text_font: font_icon }
+      on_click:
+        - script.execute: music_volume_popup
+
+  - button:
+      id: mus_shuffle
+      x: 190
+      y: 216
+      width: 40
+      height: 40
+      radius: 20
+      border_width: 0
+      pad_all: 0
+      widgets:
+        - label: { align: CENTER, text: "${ic_shuffle}", text_font: font_icon }
+      on_click:
+        - script.execute: music_toggle_shuffle
+  - button:
+      id: mus_prev
+      x: 242
+      y: 212
+      width: 48
+      height: 48
+      radius: 24
+      pad_all: 0
+      widgets:
+        - label: { align: CENTER, text: "${ic_skip_previous}", text_font: font_icon }
+      on_click:
+        - script.execute: { id: music_action, action: "media_player.media_previous_track" }
+  # Filled in the accent (apply_scheme)
+  - button:
+      id: mus_play
+      x: 298
+      y: 206
+      width: 60
+      height: 60
+      radius: 30
+      bg_color: col_heat
+      bg_opa: COVER
+      border_width: 0
+      pad_all: 0
+      pressed:
+        bg_color: col_text
+      widgets:
+        - label: { id: mus_play_lbl, align: CENTER, text: "${ic_play}", text_font: font_icon_big, text_color: col_bg }
+      on_click:
+        - script.execute: { id: music_action, action: "media_player.media_play_pause" }
+  - button:
+      id: mus_next
+      x: 366
+      y: 212
+      width: 48
+      height: 48
+      radius: 24
+      pad_all: 0
+      widgets:
+        - label: { align: CENTER, text: "${ic_skip_next}", text_font: font_icon }
+      on_click:
+        - script.execute: { id: music_action, action: "media_player.media_next_track" }
+  - button:
+      id: mus_repeat
+      x: 426
+      y: 216
+      width: 40
+      height: 40
+      radius: 20
+      border_width: 0
+      pad_all: 0
+      widgets:
+        - label: { id: mus_repeat_lbl, align: CENTER, text: "${ic_repeat}", text_font: font_icon }
+      on_click:
+        - script.execute: music_cycle_repeat
+
+  # Speaker list over the whole page; the selected one is filled, and the
+  # button next to each other speaker joins it to the selected one
+  - obj:
+      id: mus_picker
+      x: 0
+      y: 0
+      width: 480
+      height: 272
+      bg_color: col_bg
+      bg_opa: COVER
+      border_width: 0
+      radius: 0
+      pad_all: 0
+      scrollable: false
+      hidden: true
+      widgets:
+        - button:
+            x: 4
+            y: 2
+            width: 40
+            height: 34
+            border_width: 0
+            widgets:
+              - label: { align: CENTER, text: "${ic_back}", text_font: font_icon, text_color: col_text }
+            on_click:
+              - lvgl.widget.hide: mus_picker
+        - label: { x: 46, y: 6, text: "Speakers", text_font: font_title, text_color: col_text }
+        - button: &pick_row
+            id: mus_pick_0
+            x: 14
+            y: 46
+            width: 392
+            height: 50
+            pad_all: 0
+            widgets:
+              - label: { align: LEFT_MID, x: 14, text: "${ic_speaker}", text_font: font_icon }
+              - label: { id: mus_pick_name_0, align: LEFT_MID, x: 52, y: -9, width: 320, long_mode: DOT, text: "", text_font: font_music_body }
+              - label: { id: mus_pick_info_0, align: LEFT_MID, x: 52, y: 11, width: 320, long_mode: DOT, text: "", text_font: font_music_small }
+            on_click:
+              - script.execute: { id: select_music_player, p: 0 }
+        - button:
+            id: mus_join_0
+            x: 414
+            y: 46
+            width: 52
+            height: 50
+            pad_all: 0
+            widgets:
+              - label: { id: mus_join_lbl_0, align: CENTER, text: "${ic_plus}", text_font: font_icon }
+            on_click:
+              - script.execute: { id: music_toggle_join, p: 0 }
+        - button:
+            <<: *pick_row
+            id: mus_pick_1
+            y: 102
+            widgets:
+              - label: { align: LEFT_MID, x: 14, text: "${ic_speaker}", text_font: font_icon }
+              - label: { id: mus_pick_name_1, align: LEFT_MID, x: 52, y: -9, width: 320, long_mode: DOT, text: "", text_font: font_music_body }
+              - label: { id: mus_pick_info_1, align: LEFT_MID, x: 52, y: 11, width: 320, long_mode: DOT, text: "", text_font: font_music_small }
+            on_click:
+              - script.execute: { id: select_music_player, p: 1 }
+        - button:
+            id: mus_join_1
+            x: 414
+            y: 102
+            width: 52
+            height: 50
+            pad_all: 0
+            widgets:
+              - label: { id: mus_join_lbl_1, align: CENTER, text: "${ic_plus}", text_font: font_icon }
+            on_click:
+              - script.execute: { id: music_toggle_join, p: 1 }
+        - button:
+            <<: *pick_row
+            id: mus_pick_2
+            y: 158
+            widgets:
+              - label: { align: LEFT_MID, x: 14, text: "${ic_speaker}", text_font: font_icon }
+              - label: { id: mus_pick_name_2, align: LEFT_MID, x: 52, y: -9, width: 320, long_mode: DOT, text: "", text_font: font_music_body }
+              - label: { id: mus_pick_info_2, align: LEFT_MID, x: 52, y: 11, width: 320, long_mode: DOT, text: "", text_font: font_music_small }
+            on_click:
+              - script.execute: { id: select_music_player, p: 2 }
+        - button:
+            id: mus_join_2
+            x: 414
+            y: 158
+            width: 52
+            height: 50
+            pad_all: 0
+            widgets:
+              - label: { id: mus_join_lbl_2, align: CENTER, text: "${ic_plus}", text_font: font_icon }
+            on_click:
+              - script.execute: { id: music_toggle_join, p: 2 }
+        - button:
+            <<: *pick_row
+            id: mus_pick_3
+            y: 214
+            widgets:
+              - label: { align: LEFT_MID, x: 14, text: "${ic_speaker}", text_font: font_icon }
+              - label: { id: mus_pick_name_3, align: LEFT_MID, x: 52, y: -9, width: 320, long_mode: DOT, text: "", text_font: font_music_body }
+              - label: { id: mus_pick_info_3, align: LEFT_MID, x: 52, y: 11, width: 320, long_mode: DOT, text: "", text_font: font_music_small }
+            on_click:
+              - script.execute: { id: select_music_player, p: 3 }
+        - button:
+            id: mus_join_3
+            x: 414
+            y: 214
+            width: 52
+            height: 50
+            pad_all: 0
+            widgets:
+              - label: { id: mus_join_lbl_3, align: CENTER, text: "${ic_plus}", text_font: font_icon }
+            on_click:
+              - script.execute: { id: music_toggle_join, p: 3 }
+
+  # Volume popup above the volume button: − , level (tap to mute), +
+  - obj:
+      id: mus_vol_pop
+      x: 14
+      y: 148
+      width: 210
+      height: 60
+      radius: 30
+      bg_color: col_bg
+      bg_opa: COVER
+      border_width: 2
+      border_color: col_line
+      pad_all: 0
+      scrollable: false
+      hidden: true
+      widgets:
+        - button:
+            x: 8
+            y: 8
+            width: 40
+            height: 40
+            radius: 20
+            pad_all: 0
+            widgets:
+              - label: { align: CENTER, text: "${ic_minus}", text_font: font_icon }
+            on_short_click:
+              - script.execute: { id: music_step_volume, steps: -1 }
+            on_long_press_repeat:
+              - script.execute: { id: music_step_volume, steps: -1 }
+        - button:
+            id: mus_mute
+            x: 52
+            y: 8
+            width: 102
+            height: 40
+            border_width: 0
+            pad_all: 0
+            widgets:
+              # Icon and level side by side, centred on each other
+              - obj:
+                  align: CENTER
+                  width: SIZE_CONTENT
+                  height: SIZE_CONTENT
+                  bg_opa: TRANSP
+                  border_width: 0
+                  pad_all: 0
+                  clickable: false
+                  scrollable: false
+                  layout:
+                    type: flex
+                    flex_flow: ROW
+                    flex_align_cross: CENTER
+                    pad_column: 6
+                  widgets:
+                    - label: { id: mus_vol_pop_icon, text: "${ic_volume_medium}", text_font: font_icon }
+                    - label: { id: mus_vol_pop_lbl, text: "", text_font: font_body }
+            on_click:
+              - script.execute: music_volume_popup_timer
+              - script.execute: music_toggle_mute
+        - button:
+            x: 158
+            y: 8
+            width: 40
+            height: 40
+            radius: 20
+            pad_all: 0
+            widgets:
+              - label: { align: CENTER, text: "${ic_plus}", text_font: font_icon }
+            on_short_click:
+              - script.execute: { id: music_step_volume, steps: 1 }
+            on_long_press_repeat:
+              - script.execute: { id: music_step_volume, steps: 1 }

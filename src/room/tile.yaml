@@ -29,14 +29,16 @@ widgets:
       text_font: font_title
       text_color: col_text
 
-  # The dial: drag the knob (or tap the ring) to set the target
+  # The dial shows the target (the knob marks it); it doesn't react to
+  # touch, the target is set with -/+ below
   - arc:
       id: r${i}_arc
       x: 20
       y: 34
       width: 232
       height: 232
-      adjustable: true
+      adjustable: false
+      clickable: false
       start_angle: 135
       end_angle: 45
       min_value: 10
@@ -48,9 +50,6 @@ widgets:
       bg_opa: TRANSP
       border_width: 0
       pad_all: 12
-      # Dragging on the ring changes the target, it doesn't swipe the room
-      scroll_chain_hor: false
-      gesture_bubble: false
       indicator:
         arc_width: 14
         arc_color: col_idle
@@ -64,17 +63,7 @@ widgets:
         disabled:
           bg_opa: TRANSP
           border_opa: TRANSP
-      on_value:
-        - lambda: "id(r${i}_pending) = (int) x;"
-        - script.execute: refresh_r${i}
-      on_release:
-        - if:
-            condition:
-              lambda: "return id(r${i}_pending) != 0;"
-            then:
-              - script.execute: send_target_r${i}
-      # Children of the arc, so they stay centred when their text changes;
-      # the arc only reacts to presses on its ring, not on these.
+      # Children of the arc, so they stay centred when their text changes
       widgets:
         - label:
             id: r${i}_status_lbl
@@ -124,7 +113,7 @@ widgets:
   - button:
       id: r${i}_minus
       x: 83
-      y: 215
+      y: 205
       width: 46
       height: 46
       radius: 23
@@ -137,7 +126,7 @@ widgets:
   - button:
       id: r${i}_plus
       x: 143
-      y: 215
+      y: 205
       width: 46
       height: 46
       radius: 23

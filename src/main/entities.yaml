@@ -30,6 +30,21 @@ substitutions:
   # Versatile Thermostat central mode; "Stopped" is shown as a warning
   central_mode_entity: select.central_mode
 
+  # Music page (♫ bottom left): up to four media players to pick from, e.g.
+  # Music Assistant players (their names come from Home Assistant);
+  # media_player.none = unused. ha_url is Home Assistant's address as the
+  # panel reaches it, for covers served by Home Assistant itself (Music
+  # Assistant's come from Music Assistant).
+  music_0_entity: media_player.living_room_speaker
+  music_1_entity: media_player.none
+  music_2_entity: media_player.none
+  music_3_entity: media_player.none
+  ha_url: "http://192.168.178.108:8123"
+  # Music Assistant's config entry ID in Home Assistant, for the library
+  # (Settings → Devices & services → Music Assistant → ⋮ → entry ID, or
+  # the URL of its page)
+  music_assistant_entry: "01M5Z4KR19SV8HG7BJG3KAYP3P"
+
   # Screen: dims after idle_dim_s seconds without a touch, to
   # dim_brightness_f (0-1). Brightness, "Sleep after" and the colour scheme
   # are settings (⋯ on the panel, or the entities in Home Assistant); these

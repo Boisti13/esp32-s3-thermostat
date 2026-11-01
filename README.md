@@ -2,15 +2,16 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-1.1.2-orange)
+![Version](https://img.shields.io/badge/version-3.3.1-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
 A wall thermostat for Home Assistant on a cheap 4.3" ESP32-S3 touch display.
-Every room's heating on one screen: swipe between rooms, drag the dial to set
-the temperature, tap a preset. Built with ESPHome and LVGL; made for
+Every room's heating on one screen: swipe between rooms, set the temperature
+with − / +, tap a preset. Built with ESPHome and LVGL; made for
 [Versatile Thermostat](https://github.com/jmcollin78/versatile_thermostat),
-but works with any Home Assistant `climate` entity that heats.
+but works with any Home Assistant `climate` entity that heats. A music page
+controls your Music Assistant speakers too.
 
 ![Living room, heating](docs/images/room-0.png)
 
@@ -23,10 +24,12 @@ but works with any Home Assistant `climate` entity that heats.
 - **Made for this panel**: black background, outlined buttons, solid orange
   for what's active. The panel brightens and tints dark colours, and in
   16-bit colour dim filled shapes get stair-stepped edges; bright edges on
-  black stay smooth. The home room comes first and comes back when the screen wakes.
-- **Big dial**: drag the knob or tap the ring, or use − / + (hold to repeat),
-  in the entity's own steps of 0.5 °C. Sent to Home Assistant when you let
-  go, so the dial never fights you.
+  black stay smooth. The home room comes first after power-up; after a
+  sleep the panel wakes on the page and room it was showing.
+- **Big dial** shows the target; set it with − / + (hold to repeat) in
+  steps of 0.5 °C. The dial itself ignores touch, so it can't be changed
+  by accident and a swipe can start anywhere. Sent to Home Assistant a
+  moment after the last tap, so the dial never fights you.
 - **Colour tells the state**: orange while the radiator heats, blue when on
   and idle, grey when off. Status line: *Heating*, *Idle*, *Target reached*,
   *Window open*.
@@ -41,7 +44,26 @@ but works with any Home Assistant `climate` entity that heats.
   (Ember, Amber, Rose, Forest, Ocean, Mono), brightness, and *Sleep after*
   (30 s, 1 min, 5 min, Never), *Wake by touch*. They are kept in flash and
   are also entities in Home Assistant.
-- **Runs on a battery**: dims after 15 s, deep-sleeps after *Sleep after*
+- **Music page** (♫ bottom left, orange while something plays): cover art,
+  title and artist (umlauts and accents included), a progress bar
+  you can drag to seek, shuffle, previous, play/pause, next, repeat
+  (off/all/one). Volume is a small round button (its icon shows the
+  level) that opens a popup with − / +
+  (5 % steps, hold to repeat) and mute. Made for
+  [Music Assistant](https://music-assistant.io) players, works with any
+  Home Assistant `media_player`.
+- **Library** (button on the cover's corner, or tap the cover): pick something to play
+  from Music Assistant — audiobooks, playlists, albums, tracks or radio,
+  most recently played first, four per page
+  (title, and the artist below it). Plays on the selected
+  speaker. A paused track (Music Assistant reports it as *idle*) keeps its
+  title and cover.
+- **Several speakers**: tap the speaker name to pick which of up to four
+  players the page controls; **+** next to another speaker joins it, so
+  they play the same in sync (✓ takes it out again). The header shows
+  *+1* per joined speaker.
+- **Runs on a battery**: dims after 15 s (a touch on the dimmed screen
+  only brightens it, it doesn't press anything), deep-sleeps after *Sleep after*
   (1 min by default) with the backlight held off. A touch or the BOOT button wakes it, and it shows the
   last known values at once (kept in RTC memory) while it reconnects. A
   *Stay awake* switch in Home Assistant keeps it on for updates or on USB.
@@ -59,6 +81,14 @@ but works with any Home Assistant `climate` entity that heats.
 | Light mode | Light mode settings |
 |---|---|
 | ![](docs/images/light.png) | ![](docs/images/light-settings.png) |
+
+| Music | Speakers (one joined) | Library |
+|---|---|---|
+| ![](docs/images/music.png) | ![](docs/images/speakers.png) | ![](docs/images/library.png) |
+
+| Music, light mode | Volume popup |
+|---|---|
+| ![](docs/images/music-light.png) | ![](docs/images/volume.png) |
 
 ## Hardware
 
@@ -159,6 +189,9 @@ All of it lives in `src/main/entities.yaml`.
 | `outdoor_temperature_entity` | `sensor.virtual_outdoor_temperature` | status bar |
 | `main_valve_entity` | `switch.heat_exchanger` | flame in the status bar while on; `switch.none` = never |
 | `central_mode_entity` | `select.central_mode` | warning while *Stopped* |
+| `music_N_entity` (N 0–3) | `media_player.living_room_speaker` | speakers on the music page; `media_player.none` = unused slot |
+| `music_assistant_entry` | `01M5Z4KR19SV8HG7BJG3KAYP3P` | Music Assistant's config entry ID in Home Assistant, for the library |
+| `ha_url` | `http://192.168.178.108:8123` | Home Assistant as the panel reaches it, for covers it serves itself |
 | `idle_dim_s`, `dim_brightness_f` | `15`, `0.15` | dim after 15 s to 15 % |
 | `default_brightness`, `default_sleep`, `default_scheme`, `default_mode` | `70`, `1 min`, `Ember`, `Auto` | first-boot values of the settings |
 
@@ -172,6 +205,19 @@ attributes `temperature`, `current_temperature`, `current_humidity`,
 `hvac_action`, `preset_mode`, `min_temp`, `max_temp` and (Versatile
 Thermostat) `valve_open_percent`. It calls `climate.set_temperature`,
 `climate.set_preset_mode` and `climate.set_hvac_mode` (`heat`/`off`).
+
+From each media player it reads the state and `friendly_name`,
+`media_title`, `media_artist`, `entity_picture`,
+`media_duration`, `media_position`, `media_position_updated_at`,
+`volume_level`, `is_volume_muted`, `shuffle`, `repeat` and `group_members`.
+It calls `media_player.media_play_pause`, `media_previous_track`,
+`media_next_track`, `media_seek`, `volume_set`, `volume_mute`,
+`shuffle_set`, `repeat_set`, `join` and `unjoin`, and for the library
+`music_assistant.get_library` (its answer comes back to the panel) and
+`music_assistant.play_media`. The cover is downloaded
+only while the music page is open: Music Assistant's image proxy is asked
+for 160 px (its nearest size) and scaled to 150; relative URLs go to `ha_url`. The panel must be
+allowed to perform Home Assistant actions (ESPHome integration options).
 
 ## Example: a cold morning
 
@@ -203,7 +249,14 @@ src/main/rtc_cache.h       the cache's layout
 src/main/battery.yaml      optional battery level (needs the mod)
 src/room/room.yaml         one room: HA values, refresh, actions (×5)
 src/room/tile.yaml         one room's tile (×5)
+src/music/music.yaml       music page logic: player selection, cover, actions
+src/music/music_page.yaml  the music page and the speaker list
+src/music/library.yaml     library: Music Assistant lists, paging, play
+src/music/library_page.yaml    the library page
+src/music/player.yaml      one speaker: its HA values (×4)
+src/music/music.h          helpers (time, cover URL, player slots)
 demo/screenshot.yaml       the UI on a PC (SDL) with made-up values
+demo/cover.png             generated cover for the demo
 scripts/screenshots.sh     renders docs/images/*.png
 ```
 
