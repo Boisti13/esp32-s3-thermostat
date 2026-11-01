@@ -409,7 +409,24 @@ widgets:
             border_width: 0
             pad_all: 0
             widgets:
-              - label: { id: mus_vol_pop_lbl, align: CENTER, text: "", text_font: font_body }
+              # Icon and level side by side, centred on each other
+              - obj:
+                  align: CENTER
+                  width: SIZE_CONTENT
+                  height: SIZE_CONTENT
+                  bg_opa: TRANSP
+                  border_width: 0
+                  pad_all: 0
+                  clickable: false
+                  scrollable: false
+                  layout:
+                    type: flex
+                    flex_flow: ROW
+                    flex_align_cross: CENTER
+                    pad_column: 6
+                  widgets:
+                    - label: { id: mus_vol_pop_icon, text: "${ic_volume_medium}", text_font: font_icon }
+                    - label: { id: mus_vol_pop_lbl, text: "", text_font: font_body }
             on_click:
               - script.execute: music_volume_popup_timer
               - script.execute: music_toggle_mute

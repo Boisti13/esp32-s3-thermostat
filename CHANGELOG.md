@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.2.2 — 2026-11-01
+
+### Fixed
+
+- Volume popup: the speaker icon sat off the line of the level; icon and
+  level are now centred on each other.
+
 ## v3.2.1 — 2026-11-01
 
 ### Changed

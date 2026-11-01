@@ -211,9 +211,10 @@ script:
           const bool muted = m.muted->has_state() && m.muted->state;
           const char *icon = muted || v == 0 ? "${ic_volume_off}" : v < 34 ? "${ic_volume_low}"
                              : v < 67 ? "${ic_volume_medium}" : "${ic_volume_high}";
-          char buf[24];
-          snprintf(buf, sizeof(buf), "%s %d%%", icon, v);
-          lv_label_set_text(id(mus_volume_lbl), icon);   // the button: icon only
+          char buf[8];
+          snprintf(buf, sizeof(buf), "%d%%", v);
+          lv_label_set_text(id(mus_volume_lbl), icon);
+          lv_label_set_text(id(mus_vol_pop_icon), icon);
           lv_label_set_text(id(mus_vol_pop_lbl), buf);
           id(music_shuffle_on) = m.shuffle->has_state() && m.shuffle->state;
           id(music_muted_on) = muted;
