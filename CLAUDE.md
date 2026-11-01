@@ -64,6 +64,11 @@ while awake. For OTA, wake it and turn on its *Stay awake* switch.
 - A room is `src/room/room.yaml` (logic) + `src/room/tile.yaml` (widgets),
   included five times with `vars`; every ID in them starts with `r${i}_`.
   Room names and entities only in `src/main/entities.yaml`.
+- A speaker slot is `src/music/player.yaml`, included four times (`p`,
+  `entity`); its IDs start with `m${p}_`, and `music_players[]`
+  (`src/music/music.h`) points at them. Lambdas inside
+  `homeassistant.action` are compiled before the `includes:` headers, so
+  they can't use `music.h`; give them globals (`music_entity`, …).
 - Colours only as `hex_*` substitutions in `src/main/theme.yaml` (YAML uses
   the matching `col_*`, lambdas `lv_color_hex(0x${hex_*})`). The accents
   (heat, idle) change at run time: lambdas use `id(accent_heat)` /

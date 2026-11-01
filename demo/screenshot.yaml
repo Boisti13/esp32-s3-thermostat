@@ -9,6 +9,9 @@ substitutions:
   project_dir: ".."
   device_name: thermostat-demo
   friendly_name: Thermostat Demo
+  # Two more (made-up) speakers for the speaker list
+  music_1_entity: media_player.demo_kitchen
+  music_2_entity: media_player.demo_bedroom
 
 packages:
   entities: !include ../src/main/entities.yaml
@@ -16,6 +19,11 @@ packages:
   status: !include ../src/main/status.yaml
   ui: !include ../src/main/ui.yaml
   settings: !include ../src/main/settings.yaml
+  music: !include ../src/music/music.yaml
+  music_0: !include { file: ../src/music/player.yaml, vars: { p: "0", entity: "${music_0_entity}" } }
+  music_1: !include { file: ../src/music/player.yaml, vars: { p: "1", entity: "${music_1_entity}" } }
+  music_2: !include { file: ../src/music/player.yaml, vars: { p: "2", entity: "${music_2_entity}" } }
+  music_3: !include { file: ../src/music/player.yaml, vars: { p: "3", entity: "${music_3_entity}" } }
   room_0: !include { file: ../src/room/room.yaml, vars: { i: "0", entity: "${room_0_entity}", window: "${room_0_window}" } }
   room_1: !include { file: ../src/room/room.yaml, vars: { i: "1", entity: "${room_1_entity}", window: "${room_1_window}" } }
   room_2: !include { file: ../src/room/room.yaml, vars: { i: "2", entity: "${room_2_entity}", window: "${room_2_window}" } }
@@ -59,9 +67,38 @@ esphome:
             id(main_valve).publish_state(true);
             id(central_mode).publish_state("Heat only");
             id(force_connected) = true;
+            // Music: made-up speakers and track, generated cover (demo/cover.png)
+            id(m0_state).publish_state("playing");
+            id(m0_name).publish_state("Living Room Speaker");
+            id(m0_title).publish_state("Morgenlicht über dem Fluss");
+            id(m0_artist).publish_state("Example Ensemble");
+            id(m0_album).publish_state("Demo Sessions · Vol. 2");
+            id(m0_duration).publish_state(245);
+            id(m0_position).publish_state(97);
+            id(m0_volume).publish_state(0.42);
+            id(m0_shuffle).publish_state(true);
+            id(m0_repeat).publish_state("off");
+            id(m0_muted).publish_state(false);
+            id(m0_group).publish_state("['media_player.living_room_speaker', 'media_player.demo_bedroom']");
+            id(m1_state).publish_state("paused");
+            id(m1_name).publish_state("Kitchen Speaker");
+            id(m1_title).publish_state("Café am Marktplatz");
+            id(m2_state).publish_state("playing");
+            id(m2_title).publish_state("Morgenlicht über dem Fluss");
+            id(m2_name).publish_state("Bedroom Speaker");
+            id(music_cover_fixed) = true;
+        - lvgl.image.update: { id: mus_art, src: demo_cover }
+        - lvgl.widget.show: mus_art
+        - lvgl.widget.hide: mus_art_none
         - script.execute: refresh_status
 
 host:
+
+image:
+  - platform: file
+    file: cover.png
+    id: demo_cover
+    type: RGB565
 
 logger:
   level: INFO
@@ -111,23 +148,26 @@ script:
       - lvgl.pause:
 
 # Show each room in turn, then the settings page, room 0 in the Ocean
-# scheme, and room 0 and the settings page in light mode (for the
-# screenshot script)
+# scheme, room 0 and the settings page in light mode, and the music page
+# in dark and light mode, and the speaker list (for the screenshot script)
 interval:
   - interval: 3s
     then:
       - lambda: |-
           static int n = -1;   // first run (at boot) shows room 0
-          n = (n + 1) % 9;
+          n = (n + 1) % 12;
           auto scheme = [](const char *name) { id(color_scheme).make_call().set_option(name).perform(); };
           auto mode = [](const char *name) { id(appearance).make_call().set_option(name).perform(); };
           int tile = n;
           switch (n) {
-            case 0: mode("Dark"); scheme("Ember"); break;
+            case 0: lv_obj_add_flag(id(mus_picker), LV_OBJ_FLAG_HIDDEN); id(show_rooms).execute(); mode("Dark"); scheme("Ember"); break;
             case 5: id(show_settings).execute(); return;
             case 6: id(show_rooms).execute(); scheme("Ocean"); tile = 0; break;
             case 7: scheme("Ember"); mode("Light"); tile = 0; break;
             case 8: id(show_settings).execute(); return;
+            case 9: id(show_music).execute(); return;
+            case 10: mode("Dark"); return;
+            case 11: id(show_music_picker).execute(); return;
           }
           lv_obj_t *tiles[5] = {id(tile_r0), id(tile_r1), id(tile_r2), id(tile_r3), id(tile_r4)};
           lv_tileview_set_tile(id(tv_rooms), tiles[tile], LV_ANIM_OFF);

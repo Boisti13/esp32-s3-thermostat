@@ -1,6 +1,7 @@
 # The LVGL screen: one tileview with a tile per room (src/room/tile.yaml)
 # under a fixed status bar (src/main/status_widgets.yaml), and the settings
-# page (src/main/settings_page.yaml). Dimming and sleep: src/main/settings.yaml.
+# page (src/main/settings_page.yaml) and the music page
+# (src/music/music_page.yaml). Dimming and sleep: src/main/settings.yaml.
 
 esphome:
   on_boot:
@@ -124,3 +125,4 @@ lvgl:
               - !include { file: ../room/tile.yaml, vars: { i: "3", name: "${room_3_name}" } }
               - !include { file: ../room/tile.yaml, vars: { i: "4", name: "${room_4_name}" } }
     - !include settings_page.yaml
+    - !include ../music/music_page.yaml

@@ -15,6 +15,11 @@ packages:
   ui: !include src/main/ui.yaml
   settings: !include src/main/settings.yaml
   power: !include src/main/power.yaml
+  music: !include src/music/music.yaml
+  music_0: !include { file: src/music/player.yaml, vars: { p: "0", entity: "${music_0_entity}" } }
+  music_1: !include { file: src/music/player.yaml, vars: { p: "1", entity: "${music_1_entity}" } }
+  music_2: !include { file: src/music/player.yaml, vars: { p: "2", entity: "${music_2_entity}" } }
+  music_3: !include { file: src/music/player.yaml, vars: { p: "3", entity: "${music_3_entity}" } }
   room_0: !include { file: src/room/room.yaml, vars: { i: "0", entity: "${room_0_entity}", window: "${room_0_window}" } }
   room_1: !include { file: src/room/room.yaml, vars: { i: "1", entity: "${room_1_entity}", window: "${room_1_window}" } }
   room_2: !include { file: src/room/room.yaml, vars: { i: "2", entity: "${room_2_entity}", window: "${room_2_window}" } }
@@ -26,7 +31,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "boisti13.esp32-s3-thermostat"
-    version: "1.1.2"
+    version: "2.0.0"
   on_boot:
     - priority: -100
       then:

@@ -1,5 +1,27 @@
 # Changelog
 
+## v2.0.0 — 2026-11-01
+
+Needs the new `music_N_entity` and `ha_url` settings in
+`src/main/entities.yaml`.
+
+### Added
+
+- **Music page**, opened with the ♫ button bottom left of every room (orange
+  while something plays): cover art, title, artist, album, a seekable
+  progress bar, shuffle, previous, play/pause, next, repeat, volume and
+  mute for a Music Assistant (or any) media player. Titles show umlauts and
+  accents. The cover is downloaded only while the page is open.
+- **Speaker list** (tap the speaker name): pick which of up to four players
+  the page controls, and join other speakers to it so they play in sync
+  (`media_player.join` / `unjoin`).
+
+### Under the hood
+
+- New `src/music/` (logic, page, one include per player slot); the demo
+  shows the music page with made-up speakers and a generated cover, and
+  the screenshot script renders it.
+
 ## v1.1.2 — 2026-10-16
 
 ### Fixed

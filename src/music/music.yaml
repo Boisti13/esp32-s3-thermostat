@@ -1,0 +1,373 @@
+# Music: what a media player (Music Assistant's, or any other) is playing,
+# with its controls, on the music page (src/music/music_page.yaml), opened
+# with the ♫ button bottom left of every room. Up to four players
+# (src/music/player.yaml, music_<n>_entity in src/main/entities.yaml); the
+# speaker name on the page opens a list to pick which one the page controls.
+# The cover is downloaded only while the page is open (and again when the
+# track changes), so it costs nothing on a normal wake. The ♫ button lights
+# up in the accent while any of the players plays.
+
+esphome:
+  includes:
+    - ${project_dir}/src/music/music.h
+  on_boot:
+    # Before the Home Assistant sensors report anything
+    - priority: 800
+      then:
+        - lambda: |-
+            static const char *const ENT[MUSIC_PLAYERS] = {
+              "${music_0_entity}", "${music_1_entity}", "${music_2_entity}", "${music_3_entity}"};
+            text_sensor::TextSensor *st[] = {id(m0_state), id(m1_state), id(m2_state), id(m3_state)};
+            text_sensor::TextSensor *nm[] = {id(m0_name), id(m1_name), id(m2_name), id(m3_name)};
+            text_sensor::TextSensor *ti[] = {id(m0_title), id(m1_title), id(m2_title), id(m3_title)};
+            text_sensor::TextSensor *ar[] = {id(m0_artist), id(m1_artist), id(m2_artist), id(m3_artist)};
+            text_sensor::TextSensor *al[] = {id(m0_album), id(m1_album), id(m2_album), id(m3_album)};
+            text_sensor::TextSensor *pi[] = {id(m0_picture), id(m1_picture), id(m2_picture), id(m3_picture)};
+            text_sensor::TextSensor *pa[] = {id(m0_position_at), id(m1_position_at), id(m2_position_at), id(m3_position_at)};
+            text_sensor::TextSensor *re[] = {id(m0_repeat), id(m1_repeat), id(m2_repeat), id(m3_repeat)};
+            text_sensor::TextSensor *gr[] = {id(m0_group), id(m1_group), id(m2_group), id(m3_group)};
+            sensor::Sensor *vo[] = {id(m0_volume), id(m1_volume), id(m2_volume), id(m3_volume)};
+            sensor::Sensor *du[] = {id(m0_duration), id(m1_duration), id(m2_duration), id(m3_duration)};
+            sensor::Sensor *po[] = {id(m0_position), id(m1_position), id(m2_position), id(m3_position)};
+            binary_sensor::BinarySensor *sh[] = {id(m0_shuffle), id(m1_shuffle), id(m2_shuffle), id(m3_shuffle)};
+            binary_sensor::BinarySensor *mu[] = {id(m0_muted), id(m1_muted), id(m2_muted), id(m3_muted)};
+            for (int k = 0; k < MUSIC_PLAYERS; k++)
+              music_players[k] = {ENT[k], st[k], nm[k], ti[k], ar[k], al[k], pi[k], pa[k], re[k], gr[k],
+                                  vo[k], du[k], po[k], sh[k], mu[k]};
+            if (id(music_sel) < 0 || id(music_sel) >= MUSIC_PLAYERS || !music_players[id(music_sel)].used())
+              id(music_sel) = 0;
+            id(music_entity) = music_players[id(music_sel)].entity;
+    - priority: -100
+      then:
+        - lambda: |-
+            // Unused slots have no row in the speaker list
+            lv_obj_t *rows[] = {id(mus_pick_0), id(mus_pick_1), id(mus_pick_2), id(mus_pick_3)};
+            lv_obj_t *joins[] = {id(mus_join_0), id(mus_join_1), id(mus_join_2), id(mus_join_3)};
+            for (int k = 0; k < MUSIC_PLAYERS; k++)
+              if (!music_players[k].used()) {
+                lv_obj_add_flag(rows[k], LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_flag(joins[k], LV_OBJ_FLAG_HIDDEN);
+              }
+        - script.execute: refresh_music
+
+http_request:
+  id: http_cover
+  timeout: 5s
+  # Covers come over plain HTTP from Music Assistant or Home Assistant
+  verify_ssl: false
+
+image:
+  - platform: online_image
+    id: music_cover
+    url: "http://localhost/none.jpg"   # replaced before every download
+    format: JPEG
+    type: RGB565
+    resize: 150x150
+    on_download_finished:
+      - lvgl.image.update: { id: mus_art, src: music_cover }
+      - lvgl.widget.show: mus_art
+      - lvgl.widget.hide: mus_art_none
+    on_error:
+      - lambda: "id(music_cover_url_shown) = \"\";"
+      - lvgl.widget.hide: mus_art
+      - lvgl.widget.show: mus_art_none
+
+globals:
+  # Player slot the page shows and controls (kept in flash)
+  - id: music_sel
+    type: int
+    restore_value: true
+    initial_value: "0"
+  # The selected player as Home Assistant actions need it (their lambdas
+  # are compiled before src/music/music.h), with the state they toggle
+  - id: music_entity
+    type: std::string
+    initial_value: '"${music_0_entity}"'
+  - id: music_shuffle_on
+    type: bool
+    initial_value: "false"
+  - id: music_muted_on
+    type: bool
+    initial_value: "false"
+  - id: music_repeat_next
+    type: std::string
+    initial_value: '"all"'
+  # Which slots are grouped with the selected player
+  - id: music_joined
+    type: bool[4]
+  # Cover URL that is downloaded (or downloading); "" = none shown
+  - id: music_cover_url_shown
+    type: std::string
+    initial_value: '""'
+  # The PC demo shows a picture of its own instead of downloading one
+  - id: music_cover_fixed
+    type: bool
+    initial_value: "false"
+  # Volume the user set, shown until Home Assistant reports it back
+  - id: music_volume_pending
+    type: int
+    initial_value: "-1"
+
+# The progress bar moves on its own while playing (Home Assistant only
+# reports the position when it changes state)
+interval:
+  - interval: 1s
+    then:
+      - if:
+          condition:
+            lambda: |-
+              return lv_screen_active() == id(page_music)->obj && music_players[id(music_sel)].playing();
+          then:
+            - script.execute: refresh_music_position
+
+script:
+  # Player slot p reported something
+  - id: music_changed
+    parameters:
+      p: int
+    then:
+      - if:
+          condition:
+            lambda: "return p == id(music_sel);"
+          then:
+            - script.execute: refresh_music
+          else:
+            - script.execute: refresh_music_list
+
+  # The ♫ button and the speaker list (every player). Next to each other
+  # speaker: + joins it to the selected one (plays the same, in sync), ✓
+  # shows it is joined and takes it out again.
+  - id: refresh_music_list
+    then:
+      - lambda: |-
+          bool any = false;
+          const MusicPlayer &sel = music_players[id(music_sel)];
+          lv_obj_t *joins[] = {id(mus_join_0), id(mus_join_1), id(mus_join_2), id(mus_join_3)};
+          lv_obj_t *join_lbls[] = {id(mus_join_lbl_0), id(mus_join_lbl_1), id(mus_join_lbl_2), id(mus_join_lbl_3)};
+          int joined = 0;
+          lv_obj_t *rows[] = {id(mus_pick_0), id(mus_pick_1), id(mus_pick_2), id(mus_pick_3)};
+          lv_obj_t *names[] = {id(mus_pick_name_0), id(mus_pick_name_1), id(mus_pick_name_2), id(mus_pick_name_3)};
+          lv_obj_t *infos[] = {id(mus_pick_info_0), id(mus_pick_info_1), id(mus_pick_info_2), id(mus_pick_info_3)};
+          for (int k = 0; k < MUSIC_PLAYERS; k++) {
+            const MusicPlayer &m = music_players[k];
+            if (!m.used()) continue;
+            any |= m.playing();
+            lv_label_set_text(names[k], music_valid(m.name) ? m.name->state.c_str() : m.entity);
+            std::string info;
+            if (!music_valid(m.state)) info = "Not available";
+            else if (m.active() && music_valid(m.title))
+              info = std::string(m.playing() ? "${ic_play} " : "${ic_pause} ") + m.title->state;
+            else info = m.state->state == "off" ? "Off" : "Idle";
+            lv_label_set_text(infos[k], info.c_str());
+            if (k == id(music_sel)) lv_obj_add_state(rows[k], LV_STATE_CHECKED);
+            else lv_obj_remove_state(rows[k], LV_STATE_CHECKED);
+            const bool in = music_in_group(sel, m);
+            joined += in;
+            id(music_joined)[k] = in;
+            if (k == id(music_sel)) lv_obj_add_flag(joins[k], LV_OBJ_FLAG_HIDDEN);
+            else lv_obj_remove_flag(joins[k], LV_OBJ_FLAG_HIDDEN);
+            if (in) lv_obj_add_state(joins[k], LV_STATE_CHECKED);
+            else lv_obj_remove_state(joins[k], LV_STATE_CHECKED);
+            lv_label_set_text(join_lbls[k], in ? "${ic_check}" : "${ic_plus}");
+          }
+          // Header pill: name, and "+1" while others are joined
+          lv_label_set_text(id(mus_player_lbl), music_valid(sel.name) ? sel.name->state.c_str() : sel.entity);
+          lv_label_set_text(id(mus_player_count), joined ? ("+" + std::to_string(joined)).c_str() : "");
+          lv_obj_set_style_text_color(id(mus_player_count), lv_color_hex(id(accent_heat)), 0);
+          lv_obj_set_style_text_color(id(btn_music_icon), lv_color_hex(any ? id(accent_heat) : pal(0x${hex_text2})), 0);
+
+  # The page from the selected player
+  - id: refresh_music
+    mode: queued
+    max_runs: 2
+    then:
+      - lambda: |-
+          const MusicPlayer &m = music_players[id(music_sel)];
+          const bool playing = m.playing();
+          const bool active = m.active();
+
+          if (!music_valid(m.state)) lv_label_set_text(id(mus_title_lbl), "Player not available");
+          else if (active && music_valid(m.title)) lv_label_set_text(id(mus_title_lbl), m.title->state.c_str());
+          else lv_label_set_text(id(mus_title_lbl), "Nothing playing");
+          lv_label_set_text(id(mus_artist_lbl), active && music_valid(m.artist) ? m.artist->state.c_str() : "");
+          lv_label_set_text(id(mus_album_lbl), active && music_valid(m.album) ? m.album->state.c_str() : "");
+          lv_obj_set_style_text_color(id(mus_artist_lbl), lv_color_hex(id(accent_heat)), 0);
+
+          lv_label_set_text(id(mus_play_lbl), playing ? "${ic_pause}" : "${ic_play}");
+
+          // Shuffle and repeat: filled while on
+          if (m.shuffle->has_state() && m.shuffle->state) lv_obj_add_state(id(mus_shuffle), LV_STATE_CHECKED);
+          else lv_obj_remove_state(id(mus_shuffle), LV_STATE_CHECKED);
+          const std::string &rep = m.repeat->state;
+          if (rep == "all" || rep == "one") lv_obj_add_state(id(mus_repeat), LV_STATE_CHECKED);
+          else lv_obj_remove_state(id(mus_repeat), LV_STATE_CHECKED);
+          lv_label_set_text(id(mus_repeat_lbl), rep == "one" ? "${ic_repeat_once}" : "${ic_repeat}");
+
+          // Volume (the slider's own value while it is being dragged)
+          const float vol = m.volume->state;
+          if (id(music_volume_pending) >= 0 && !isnan(vol) && lroundf(vol * 100) == id(music_volume_pending))
+            id(music_volume_pending) = -1;
+          int v = id(music_volume_pending) >= 0 ? id(music_volume_pending) : isnan(vol) ? 0 : (int) lroundf(vol * 100);
+          if (!lv_obj_has_state(id(mus_volume_slider), LV_STATE_PRESSED))
+            lv_slider_set_value(id(mus_volume_slider), v, LV_ANIM_OFF);
+          char buf[16];
+          snprintf(buf, sizeof(buf), "%d%%", v);
+          lv_label_set_text(id(mus_volume_lbl), buf);
+          const bool muted = m.muted->has_state() && m.muted->state;
+          id(music_shuffle_on) = m.shuffle->has_state() && m.shuffle->state;
+          id(music_muted_on) = muted;
+          id(music_repeat_next) = rep == "all" ? "one" : rep == "one" ? "off" : "all";   // off -> all -> one
+          lv_label_set_text(id(mus_mute_lbl), muted || v == 0 ? "${ic_volume_off}" : v < 34 ? "${ic_volume_low}"
+                                                             : v < 67 ? "${ic_volume_medium}" : "${ic_volume_high}");
+      - script.execute: refresh_music_position
+      - script.execute: refresh_music_list
+
+  # Elapsed / total time and the progress bar
+  - id: refresh_music_position
+    then:
+      - lambda: |-
+          const MusicPlayer &m = music_players[id(music_sel)];
+          const float dur = m.duration->state;
+          lv_obj_t *bar = id(mus_progress);
+          if (!m.active() || isnan(dur) || dur <= 0) {
+            lv_obj_add_flag(bar, LV_OBJ_FLAG_HIDDEN);
+            lv_label_set_text(id(mus_elapsed_lbl), "");
+            lv_label_set_text(id(mus_total_lbl), "");
+            return;
+          }
+          lv_obj_remove_flag(bar, LV_OBJ_FLAG_HIDDEN);
+          float pos = isnan(m.position->state) ? 0 : m.position->state;
+          auto now = id(ha_time).now();
+          const int64_t at = music_parse_utc(m.position_at->state);
+          if (m.playing() && now.is_valid() && at > 0 && now.timestamp > at)
+            pos += (float) (now.timestamp - at);
+          if (pos > dur) pos = dur;
+          lv_slider_set_range(bar, 0, (int) dur);
+          if (!lv_obj_has_state(bar, LV_STATE_PRESSED))
+            lv_slider_set_value(bar, (int) pos, LV_ANIM_OFF);
+          char buf[16];
+          music_fmt_time(buf, sizeof(buf), (int) lv_slider_get_value(bar));
+          lv_label_set_text(id(mus_elapsed_lbl), buf);
+          music_fmt_time(buf, sizeof(buf), (int) dur);
+          lv_label_set_text(id(mus_total_lbl), buf);
+
+  # Download the selected player's cover if the page is open and it changed
+  - id: load_cover
+    mode: queued
+    max_runs: 2
+    then:
+      - lambda: |-
+          if (id(music_cover_fixed) || lv_screen_active() != id(page_music)->obj) return;
+          const std::string url = music_cover_url(music_players[id(music_sel)].picture->state, "${ha_url}", 150);
+          if (url == id(music_cover_url_shown)) return;
+          id(music_cover_url_shown) = url;
+          if (url.empty()) {
+            lv_obj_add_flag(id(mus_art), LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(id(mus_art_none), LV_OBJ_FLAG_HIDDEN);
+            return;
+          }
+          ESP_LOGI("music", "cover %s", url.c_str());
+          id(music_cover).set_url(url);
+          id(music_cover).update();
+
+  - id: show_music
+    then:
+      - lvgl.widget.hide: [btn_menu, btn_music, dots_row, mus_picker]
+      - lvgl.page.show:
+          id: page_music
+          animation: NONE
+      - script.execute: refresh_music
+      - script.execute: load_cover
+
+  # Speaker list: open / pick one
+  - id: show_music_picker
+    then:
+      - script.execute: refresh_music_list
+      - lvgl.widget.show: mus_picker
+  - id: select_music_player
+    parameters:
+      p: int
+    then:
+      - lambda: |-
+          if (p >= 0 && p < MUSIC_PLAYERS && music_players[p].used()) id(music_sel) = p;
+          id(music_entity) = music_players[id(music_sel)].entity;
+          id(music_volume_pending) = -1;
+      - lvgl.widget.hide: mus_picker
+      - script.execute: refresh_music
+      - script.execute: load_cover
+
+  # Join slot p to the selected player, or take it out of the group
+  - id: music_toggle_join
+    parameters:
+      p: int
+    then:
+      - if:
+          condition:
+            lambda: "return id(music_joined)[p];"
+          then:
+            - homeassistant.action:
+                action: media_player.unjoin
+                data:
+                  entity_id: !lambda 'return std::string(p == 0 ? "${music_0_entity}" : p == 1 ? "${music_1_entity}" : p == 2 ? "${music_2_entity}" : "${music_3_entity}");'
+          else:
+            - homeassistant.action:
+                action: media_player.join
+                data:
+                  entity_id: !lambda "return id(music_entity);"
+                data_template:
+                  group_members: "{{ [member] }}"
+                variables:
+                  member: !lambda 'return std::string(p == 0 ? "${music_0_entity}" : p == 1 ? "${music_1_entity}" : p == 2 ? "${music_2_entity}" : "${music_3_entity}");'
+
+  - id: music_action
+    parameters:
+      action: std::string
+    then:
+      - homeassistant.action:
+          action: !lambda "return action;"
+          data:
+            entity_id: !lambda "return id(music_entity);"
+
+  - id: music_set_volume
+    then:
+      - lambda: "id(music_volume_pending) = lv_slider_get_value(id(mus_volume_slider));"
+      - homeassistant.action:
+          action: media_player.volume_set
+          data:
+            entity_id: !lambda "return id(music_entity);"
+            volume_level: !lambda 'return str_sprintf("%.2f", id(music_volume_pending) / 100.0f);'
+      - delay: 5s
+      - globals.set: { id: music_volume_pending, value: "-1" }
+      - script.execute: refresh_music
+
+  - id: music_seek
+    then:
+      - homeassistant.action:
+          action: media_player.media_seek
+          data:
+            entity_id: !lambda "return id(music_entity);"
+            seek_position: !lambda 'return str_sprintf("%d", (int) lv_slider_get_value(id(mus_progress)));'
+
+  - id: music_toggle_shuffle
+    then:
+      - homeassistant.action:
+          action: media_player.shuffle_set
+          data:
+            entity_id: !lambda "return id(music_entity);"
+            shuffle: !lambda 'return std::string(id(music_shuffle_on) ? "false" : "true");'
+
+  - id: music_cycle_repeat
+    then:
+      - homeassistant.action:
+          action: media_player.repeat_set
+          data:
+            entity_id: !lambda "return id(music_entity);"
+            repeat: !lambda "return id(music_repeat_next);"
+
+  - id: music_toggle_mute
+    then:
+      - homeassistant.action:
+          action: media_player.volume_mute
+          data:
+            entity_id: !lambda "return id(music_entity);"
+            is_volume_muted: !lambda 'return std::string(id(music_muted_on) ? "false" : "true");'
