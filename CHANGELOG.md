@@ -1,5 +1,14 @@
 # Changelog
 
+## v3.1.0 — 2026-11-01
+
+### Changed
+
+- Waking from sleep returns to the page and room the panel was showing
+  (room, music page or settings; the library comes back as the music
+  page) instead of the home room. Kept in RTC memory with the other
+  values; after a power-up it still starts on the home room.
+
 ## v3.0.1 — 2026-11-01
 
 ### Fixed

@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-3.0.1-orange)
+![Version](https://img.shields.io/badge/version-3.1.0-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -24,7 +24,8 @@ controls your Music Assistant speakers too.
 - **Made for this panel**: black background, outlined buttons, solid orange
   for what's active. The panel brightens and tints dark colours, and in
   16-bit colour dim filled shapes get stair-stepped edges; bright edges on
-  black stay smooth. The home room comes first and comes back when the screen wakes.
+  black stay smooth. The home room comes first after power-up; after a
+  sleep the panel wakes on the page and room it was showing.
 - **Big dial**: drag the knob or tap the ring, or use − / + (hold to repeat),
   in the entity's own steps of 0.5 °C. Sent to Home Assistant when you let
   go, so the dial never fights you.
