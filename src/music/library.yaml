@@ -1,6 +1,6 @@
 # Library: pick something to play. Opened with the list button on the music
 # page; lists Music Assistant's library by category (chips at the top),
-# most recently played first, five titles per page (‹ › to page). Tapping a
+# most recently played first, four titles per page (‹ › to page). Tapping a
 # title plays it on the selected speaker. The lists come from Music
 # Assistant's music_assistant.get_library action, whose answer Home
 # Assistant sends back to the panel (src/music/library_page.yaml has the
@@ -18,7 +18,7 @@ globals:
     initial_value: "0"
   # URIs of the titles on the rows; "" = empty row
   - id: lib_uris
-    type: std::array<std::string, 5>
+    type: std::array<std::string, 4>
   # A next page exists (the request asks for one title more than it shows)
   - id: lib_more
     type: bool
@@ -69,8 +69,8 @@ script:
             if (k == id(lib_cat)) lv_obj_add_state(chips[k], LV_STATE_CHECKED);
             else lv_obj_remove_state(chips[k], LV_STATE_CHECKED);
           }
-          lv_obj_t *rows[5] = {id(lib_row_0), id(lib_row_1), id(lib_row_2), id(lib_row_3), id(lib_row_4)};
-          for (int k = 0; k < 5; k++) {
+          lv_obj_t *rows[4] = {id(lib_row_0), id(lib_row_1), id(lib_row_2), id(lib_row_3)};
+          for (int k = 0; k < 4; k++) {
             id(lib_uris)[k] = "";
             lv_obj_add_flag(rows[k], LV_OBJ_FLAG_HIDDEN);
           }
@@ -86,32 +86,40 @@ script:
             order_by: last_played_desc
           # Numbers: ESPHome sends data as text, the template makes them ints
           data_template:
-            limit: "{{ 6 }}"
+            limit: "{{ 5 }}"
             offset: "{{ offset | int }}"
           variables:
-            offset: !lambda 'return str_sprintf("%d", id(lib_page) * 5);'
+            offset: !lambda 'return str_sprintf("%d", id(lib_page) * 4);'
           capture_response: true
           on_success:
             - lambda: |-
-                lv_obj_t *rows[5] = {id(lib_row_0), id(lib_row_1), id(lib_row_2), id(lib_row_3), id(lib_row_4)};
-                lv_obj_t *names[5] = {id(lib_name_0), id(lib_name_1), id(lib_name_2), id(lib_name_3), id(lib_name_4)};
+                lv_obj_t *rows[4] = {id(lib_row_0), id(lib_row_1), id(lib_row_2), id(lib_row_3)};
+                lv_obj_t *names[4] = {id(lib_name_0), id(lib_name_1), id(lib_name_2), id(lib_name_3)};
+                lv_obj_t *infos[4] = {id(lib_info_0), id(lib_info_1), id(lib_info_2), id(lib_info_3)};
+                // Fullwidth bars (｜, common in video titles) aren't in the font
+                auto clean = [](const char *in) {
+                  std::string s(in);
+                  for (size_t p; (p = s.find("\xEF\xBD\x9C")) != std::string::npos;) s.replace(p, 3, " | ");
+                  return s;
+                };
                 int n = 0;
                 id(lib_more) = false;
                 // Home Assistant wraps the action's answer: {"response": {"items": [...]}}
                 JsonArrayConst items = response["response"]["items"].as<JsonArrayConst>();
                 ESP_LOGI("library", "%s page %d: %u titles", id(lib_type).c_str(), id(lib_page), (unsigned) items.size());
                 for (JsonObjectConst it : items) {
-                  if (n == 5) { id(lib_more) = true; break; }
-                  const char *name = it["name"] | "";
+                  if (n == 4) { id(lib_more) = true; break; }
                   const char *uri = it["uri"] | "";
-                  std::string text = name;
-                  // Albums and tracks: "Title · Artist"
+                  // Title on top; artist (albums, tracks) below, or the title
+                  // alone, centred
+                  std::string artist;
                   JsonArrayConst artists = it["artists"].as<JsonArrayConst>();
-                  if (!artists.isNull() && artists.size() > 0) {
-                    const char *a = artists[0]["name"] | "";
-                    if (*a) text += std::string(" · ") + a;
-                  }
-                  lv_label_set_text(names[n], text.c_str());
+                  if (!artists.isNull() && artists.size() > 0) artist = clean(artists[0]["name"] | "");
+                  lv_label_set_text(names[n], clean(it["name"] | "").c_str());
+                  lv_label_set_text(infos[n], artist.c_str());
+                  lv_obj_set_y(names[n], artist.empty() ? 0 : -9);
+                  if (artist.empty()) lv_obj_add_flag(infos[n], LV_OBJ_FLAG_HIDDEN);
+                  else lv_obj_remove_flag(infos[n], LV_OBJ_FLAG_HIDDEN);
                   id(lib_uris)[n] = uri;
                   lv_obj_remove_flag(rows[n], LV_OBJ_FLAG_HIDDEN);
                   n++;
@@ -133,7 +141,7 @@ script:
     then:
       - if:
           condition:
-            lambda: "return k >= 0 && k < 5 && !id(lib_uris)[k].empty();"
+            lambda: "return k >= 0 && k < 4 && !id(lib_uris)[k].empty();"
           then:
             - homeassistant.action:
                 action: music_assistant.play_media

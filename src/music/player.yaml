@@ -30,12 +30,6 @@ text_sensor:
     internal: true
     on_value: { script.execute: { id: music_changed, p: "${p}" } }
   - platform: homeassistant
-    id: m${p}_album
-    entity_id: ${entity}
-    attribute: media_album_name
-    internal: true
-    on_value: { script.execute: { id: music_changed, p: "${p}" } }
-  - platform: homeassistant
     id: m${p}_picture
     entity_id: ${entity}
     attribute: entity_picture

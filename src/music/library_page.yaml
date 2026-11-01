@@ -5,9 +5,9 @@
 #  │ ‹ Library                      ☁ 9.5°  17:07 │
 #  │ [Books][Lists][Albums][Tracks][Radio]  [‹][›]│
 #  │ ┌──────────────────────────────────────────┐ │
-#  │ │ ▶ Der finstere Rivale                    │ │
-#  │ ├──────────────────────────────────────────┤ │
-#  │ │ ▶ Das leere Grab                         │ │  × 5
+#  │ │ ▶ Autumn 1942 | WWII Big Band & 1940s…   │ │
+#  │ │   American Radio Archives                │ │  × 4
+#  │ └──────────────────────────────────────────┘ │
 #  └──────────────────────────────────────────────┘
 
 id: page_library
@@ -118,54 +118,49 @@ widgets:
       text_font: font_music_body
       text_color: col_text2
 
-  # Five titles
+  # Four titles: title, and the artist below it (hidden when there is none)
   - button: &lib_row
       id: lib_row_0
       x: 14
       y: 80
       width: 452
-      height: 34
-      radius: 10
+      height: 44
+      radius: 12
       pad_all: 0
       hidden: true
       widgets:
         - label: { align: LEFT_MID, x: 12, text: "${ic_play}", text_font: font_music_small }
-        - label: { id: lib_name_0, align: LEFT_MID, x: 32, width: 410, long_mode: DOT, text: "", text_font: font_music_body }
+        - label: { id: lib_name_0, align: LEFT_MID, x: 32, y: -9, width: 408, height: 20, long_mode: DOT, text: "", text_font: font_music_body }
+        - label: { id: lib_info_0, align: LEFT_MID, x: 32, y: 11, width: 408, height: 17, long_mode: DOT, text: "", text_font: font_music_small, text_color: col_text2 }
       on_click:
         - script.execute: { id: library_play, k: 0 }
   - button:
       <<: *lib_row
       id: lib_row_1
-      y: 118
+      y: 128
       widgets:
         - label: { align: LEFT_MID, x: 12, text: "${ic_play}", text_font: font_music_small }
-        - label: { id: lib_name_1, align: LEFT_MID, x: 32, width: 410, long_mode: DOT, text: "", text_font: font_music_body }
+        - label: { id: lib_name_1, align: LEFT_MID, x: 32, y: -9, width: 408, height: 20, long_mode: DOT, text: "", text_font: font_music_body }
+        - label: { id: lib_info_1, align: LEFT_MID, x: 32, y: 11, width: 408, height: 17, long_mode: DOT, text: "", text_font: font_music_small, text_color: col_text2 }
       on_click:
         - script.execute: { id: library_play, k: 1 }
   - button:
       <<: *lib_row
       id: lib_row_2
-      y: 156
+      y: 176
       widgets:
         - label: { align: LEFT_MID, x: 12, text: "${ic_play}", text_font: font_music_small }
-        - label: { id: lib_name_2, align: LEFT_MID, x: 32, width: 410, long_mode: DOT, text: "", text_font: font_music_body }
+        - label: { id: lib_name_2, align: LEFT_MID, x: 32, y: -9, width: 408, height: 20, long_mode: DOT, text: "", text_font: font_music_body }
+        - label: { id: lib_info_2, align: LEFT_MID, x: 32, y: 11, width: 408, height: 17, long_mode: DOT, text: "", text_font: font_music_small, text_color: col_text2 }
       on_click:
         - script.execute: { id: library_play, k: 2 }
   - button:
       <<: *lib_row
       id: lib_row_3
-      y: 194
+      y: 224
       widgets:
         - label: { align: LEFT_MID, x: 12, text: "${ic_play}", text_font: font_music_small }
-        - label: { id: lib_name_3, align: LEFT_MID, x: 32, width: 410, long_mode: DOT, text: "", text_font: font_music_body }
+        - label: { id: lib_name_3, align: LEFT_MID, x: 32, y: -9, width: 408, height: 20, long_mode: DOT, text: "", text_font: font_music_body }
+        - label: { id: lib_info_3, align: LEFT_MID, x: 32, y: 11, width: 408, height: 17, long_mode: DOT, text: "", text_font: font_music_small, text_color: col_text2 }
       on_click:
         - script.execute: { id: library_play, k: 3 }
-  - button:
-      <<: *lib_row
-      id: lib_row_4
-      y: 232
-      widgets:
-        - label: { align: LEFT_MID, x: 12, text: "${ic_play}", text_font: font_music_small }
-        - label: { id: lib_name_4, align: LEFT_MID, x: 32, width: 410, long_mode: DOT, text: "", text_font: font_music_body }
-      on_click:
-        - script.execute: { id: library_play, k: 4 }

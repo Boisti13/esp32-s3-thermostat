@@ -21,7 +21,6 @@ esphome:
             text_sensor::TextSensor *nm[] = {id(m0_name), id(m1_name), id(m2_name), id(m3_name)};
             text_sensor::TextSensor *ti[] = {id(m0_title), id(m1_title), id(m2_title), id(m3_title)};
             text_sensor::TextSensor *ar[] = {id(m0_artist), id(m1_artist), id(m2_artist), id(m3_artist)};
-            text_sensor::TextSensor *al[] = {id(m0_album), id(m1_album), id(m2_album), id(m3_album)};
             text_sensor::TextSensor *pi[] = {id(m0_picture), id(m1_picture), id(m2_picture), id(m3_picture)};
             text_sensor::TextSensor *pa[] = {id(m0_position_at), id(m1_position_at), id(m2_position_at), id(m3_position_at)};
             text_sensor::TextSensor *re[] = {id(m0_repeat), id(m1_repeat), id(m2_repeat), id(m3_repeat)};
@@ -32,7 +31,7 @@ esphome:
             binary_sensor::BinarySensor *sh[] = {id(m0_shuffle), id(m1_shuffle), id(m2_shuffle), id(m3_shuffle)};
             binary_sensor::BinarySensor *mu[] = {id(m0_muted), id(m1_muted), id(m2_muted), id(m3_muted)};
             for (int k = 0; k < MUSIC_PLAYERS; k++)
-              music_players[k] = {ENT[k], st[k], nm[k], ti[k], ar[k], al[k], pi[k], pa[k], re[k], gr[k],
+              music_players[k] = {ENT[k], st[k], nm[k], ti[k], ar[k], pi[k], pa[k], re[k], gr[k],
                                   vo[k], du[k], po[k], sh[k], mu[k]};
             if (id(music_sel) < 0 || id(music_sel) >= MUSIC_PLAYERS || !music_players[id(music_sel)].used())
               id(music_sel) = 0;
@@ -190,7 +189,6 @@ script:
           else if (active && music_valid(m.title)) lv_label_set_text(id(mus_title_lbl), m.title->state.c_str());
           else lv_label_set_text(id(mus_title_lbl), "Nothing playing");
           lv_label_set_text(id(mus_artist_lbl), active && music_valid(m.artist) ? m.artist->state.c_str() : "");
-          lv_label_set_text(id(mus_album_lbl), active && music_valid(m.album) ? m.album->state.c_str() : "");
           lv_obj_set_style_text_color(id(mus_artist_lbl), lv_color_hex(id(accent_heat)), 0);
 
           lv_label_set_text(id(mus_play_lbl), playing ? "${ic_pause}" : "${ic_play}");

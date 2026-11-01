@@ -73,7 +73,6 @@ esphome:
             id(m0_name).publish_state("Living Room Speaker");
             id(m0_title).publish_state("Morgenlicht über dem Fluss");
             id(m0_artist).publish_state("Example Ensemble");
-            id(m0_album).publish_state("Demo Sessions · Vol. 2");
             id(m0_duration).publish_state(245);
             id(m0_position).publish_state(97);
             id(m0_volume).publish_state(0.42);
@@ -148,12 +147,21 @@ script:
       - script.execute: show_library
       - delay: 300ms
       - lambda: |-
-          static const char *const T[5] = {"Der Leuchtturm am Ende der Welt", "Café am Marktplatz",
-                                           "Morgenlicht über dem Fluss", "Die Stadt der Uhren", "Sommerregen"};
-          lv_obj_t *rows[5] = {id(lib_row_0), id(lib_row_1), id(lib_row_2), id(lib_row_3), id(lib_row_4)};
-          lv_obj_t *names[5] = {id(lib_name_0), id(lib_name_1), id(lib_name_2), id(lib_name_3), id(lib_name_4)};
-          for (int k = 0; k < 5; k++) {
+          static const char *const T[4] = {"Morgenlicht über dem Fluss", "Café am Marktplatz",
+                                           "A Very Long Title That Does Not Fit On One Line Of The Panel At All",
+                                           "Sommerregen"};
+          static const char *const A[4] = {"Example Ensemble", "", "The Placeholder Orchestra", "Example Ensemble"};
+          lv_obj_t *rows[4] = {id(lib_row_0), id(lib_row_1), id(lib_row_2), id(lib_row_3)};
+          lv_obj_t *names[4] = {id(lib_name_0), id(lib_name_1), id(lib_name_2), id(lib_name_3)};
+          lv_obj_t *infos[4] = {id(lib_info_0), id(lib_info_1), id(lib_info_2), id(lib_info_3)};
+          lv_obj_set_state(id(lib_cat_0), LV_STATE_CHECKED, false);
+          lv_obj_set_state(id(lib_cat_3), LV_STATE_CHECKED, true);
+          for (int k = 0; k < 4; k++) {
             lv_label_set_text(names[k], T[k]);
+            lv_label_set_text(infos[k], A[k]);
+            lv_obj_set_y(names[k], *A[k] ? -9 : 0);
+            if (*A[k]) lv_obj_remove_flag(infos[k], LV_OBJ_FLAG_HIDDEN);
+            else lv_obj_add_flag(infos[k], LV_OBJ_FLAG_HIDDEN);
             lv_obj_remove_flag(rows[k], LV_OBJ_FLAG_HIDDEN);
           }
           lv_obj_add_flag(id(lib_status_lbl), LV_OBJ_FLAG_HIDDEN);

@@ -6,7 +6,7 @@
 #  │ ‹ Music (🔈 Living Room Speaker ▾) ☁ 9.5° 17:07│
 #  │ ┌──────────┐  Der finstere Rivale            │
 #  │ │          │  Die Drei Fragezeichen          │
-#  │ │  cover   │  Album                          │
+#  │ │  cover   │                                 │
 #  │ │          │  ━━━━━━━●────────────────       │
 #  │ └───────(☰)   12:04                 1:00:40  │
 #  │ (🔉)            ⤨    ⏮   (▶)   ⏭    🔁      │
@@ -109,7 +109,7 @@ widgets:
   - label:
       id: mus_title_lbl
       x: 186
-      y: 46
+      y: 52
       width: 280
       height: 56
       long_mode: DOT
@@ -119,21 +119,13 @@ widgets:
   - label:
       id: mus_artist_lbl
       x: 186
-      y: 106
+      y: 116
       width: 280
+      height: 20
       long_mode: DOT
       text: ""
       text_font: font_music_body
       text_color: col_heat
-  - label:
-      id: mus_album_lbl
-      x: 186
-      y: 128
-      width: 280
-      long_mode: DOT
-      text: ""
-      text_font: font_music_small
-      text_color: col_text2
 
   # Progress; drag to seek
   - slider:

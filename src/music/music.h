@@ -55,7 +55,7 @@ inline std::string music_cover_url(const std::string &pic, const char *ha_url, i
 // src/music/music.yaml so scripts can work on the selected one by number.
 struct MusicPlayer {
   const char *entity;
-  esphome::text_sensor::TextSensor *state, *name, *title, *artist, *album, *picture, *position_at, *repeat, *group;
+  esphome::text_sensor::TextSensor *state, *name, *title, *artist, *picture, *position_at, *repeat, *group;
   esphome::sensor::Sensor *volume, *duration, *position;
   esphome::binary_sensor::BinarySensor *shuffle, *muted;
 

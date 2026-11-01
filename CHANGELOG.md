@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.3.1 — 2026-11-01
+
+### Fixed
+
+- Library rows were unreadable: long names wrapped over two or three lines
+  and ran into each other. Each row is now one line of title and one of
+  artist (grey), cut off with "…", four rows per page; titles without an
+  artist sit centred. Fullwidth bars (｜, common in video titles) show as
+  normal bars instead of an empty box.
+
+### Changed
+
+- Music page: the album line is gone (for downloaded audiobooks it held
+  the source URL, and it wrapped); title and artist only, the artist on
+  one line.
+
 ## v3.3.0 — 2026-11-01
 
 ### Changed

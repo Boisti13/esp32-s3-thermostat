@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-3.3.0-orange)
+![Version](https://img.shields.io/badge/version-3.3.1-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -45,7 +45,7 @@ controls your Music Assistant speakers too.
   (30 s, 1 min, 5 min, Never), *Wake by touch*. They are kept in flash and
   are also entities in Home Assistant.
 - **Music page** (♫ bottom left, orange while something plays): cover art,
-  title, artist and album (umlauts and accents included), a progress bar
+  title and artist (umlauts and accents included), a progress bar
   you can drag to seek, shuffle, previous, play/pause, next, repeat
   (off/all/one). Volume is a small round button (its icon shows the
   level) that opens a popup with − / +
@@ -54,7 +54,8 @@ controls your Music Assistant speakers too.
   Home Assistant `media_player`.
 - **Library** (button on the cover's corner, or tap the cover): pick something to play
   from Music Assistant — audiobooks, playlists, albums, tracks or radio,
-  most recently played first, five per page. Plays on the selected
+  most recently played first, four per page
+  (title, and the artist below it). Plays on the selected
   speaker. A paused track (Music Assistant reports it as *idle*) keeps its
   title and cover.
 - **Several speakers**: tap the speaker name to pick which of up to four
@@ -206,7 +207,7 @@ Thermostat) `valve_open_percent`. It calls `climate.set_temperature`,
 `climate.set_preset_mode` and `climate.set_hvac_mode` (`heat`/`off`).
 
 From each media player it reads the state and `friendly_name`,
-`media_title`, `media_artist`, `media_album_name`, `entity_picture`,
+`media_title`, `media_artist`, `entity_picture`,
 `media_duration`, `media_position`, `media_position_updated_at`,
 `volume_level`, `is_volume_muted`, `shuffle`, `repeat` and `group_members`.
 It calls `media_player.media_play_pause`, `media_previous_track`,
