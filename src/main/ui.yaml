@@ -23,8 +23,8 @@ script:
   # touchscreen's on_update with where the touch started and where it is).
   # 50 px sideways, mostly horizontal: left = next room, right = previous.
   # The room switches right away, and LVGL drops the press so whatever the
-  # finger started on isn't clicked. Touches starting on the dial's ring
-  # (or its -/+) adjust the target instead.
+  # finger started on isn't clicked. The dial ignores touch, so a swipe
+  # may start anywhere on it.
   - id: touch_moved
     parameters:
       x0: int
@@ -36,9 +36,6 @@ script:
           if (id(swipe_done) || lv_screen_active() != id(page_main)->obj) return;
           const int dx = x - x0, dy = y - y0;
           if (abs(dx) < 50 || abs(dx) < 2 * abs(dy)) return;
-          const float rx = x0 - 136, ry = y0 - 150;   // dial centre
-          const float r = sqrtf(rx * rx + ry * ry);
-          if (r > 70 && r < 125) return;               // on the ring
           id(swipe_done) = true;
           lv_obj_t *tv = id(tv_rooms);
           const int count = (int) lv_obj_get_child_count(tv);

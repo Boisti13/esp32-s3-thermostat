@@ -1,5 +1,22 @@
 # Changelog
 
+## v3.3.0 — 2026-11-01
+
+### Changed
+
+- The heating dial no longer reacts to touch (no dragging the knob or
+  tapping the ring): the target is set with − / + only. Swipes to the
+  next room now work from anywhere on the dial too.
+
+### Fixed
+
+- A touch on the dimmed screen pressed whatever was under the finger; now
+  it only brightens the screen.
+- Library stayed empty: Home Assistant wraps the action's answer in
+  `{"response": …}`, and the panel looked for the titles one level too
+  high.
+- − / + sit 10 px higher, clear of the page dots.
+
 ## v3.2.2 — 2026-11-01
 
 ### Fixed

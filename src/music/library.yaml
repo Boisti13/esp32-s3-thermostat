@@ -97,7 +97,10 @@ script:
                 lv_obj_t *names[5] = {id(lib_name_0), id(lib_name_1), id(lib_name_2), id(lib_name_3), id(lib_name_4)};
                 int n = 0;
                 id(lib_more) = false;
-                for (JsonObjectConst it : response["items"].as<JsonArrayConst>()) {
+                // Home Assistant wraps the action's answer: {"response": {"items": [...]}}
+                JsonArrayConst items = response["response"]["items"].as<JsonArrayConst>();
+                ESP_LOGI("library", "%s page %d: %u titles", id(lib_type).c_str(), id(lib_page), (unsigned) items.size());
+                for (JsonObjectConst it : items) {
                   if (n == 5) { id(lib_more) = true; break; }
                   const char *name = it["name"] | "";
                   const char *uri = it["uri"] | "";

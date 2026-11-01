@@ -177,6 +177,19 @@ interval:
           if (ms && idle >= ms) id(idle_sleep).execute();
 
 script:
+  # A touch: while the screen is dimmed it only brightens it. LVGL drops
+  # the press (no button fires) and it doesn't count as a swipe.
+  - id: touch_wake
+    then:
+      - lambda: |-
+          if (!id(ui_ready) || !id(dimmed)) return;
+          id(swipe_done) = true;
+          for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
+            lv_indev_reset(in, nullptr);
+            lv_indev_wait_release(in);
+          }
+      - script.execute: wake_screen
+
   # Back to full brightness on a touch
   - id: wake_screen
     then:

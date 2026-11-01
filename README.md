@@ -2,13 +2,13 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-3.2.2-orange)
+![Version](https://img.shields.io/badge/version-3.3.0-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
 A wall thermostat for Home Assistant on a cheap 4.3" ESP32-S3 touch display.
-Every room's heating on one screen: swipe between rooms, drag the dial to set
-the temperature, tap a preset. Built with ESPHome and LVGL; made for
+Every room's heating on one screen: swipe between rooms, set the temperature
+with − / +, tap a preset. Built with ESPHome and LVGL; made for
 [Versatile Thermostat](https://github.com/jmcollin78/versatile_thermostat),
 but works with any Home Assistant `climate` entity that heats. A music page
 controls your Music Assistant speakers too.
@@ -26,9 +26,10 @@ controls your Music Assistant speakers too.
   16-bit colour dim filled shapes get stair-stepped edges; bright edges on
   black stay smooth. The home room comes first after power-up; after a
   sleep the panel wakes on the page and room it was showing.
-- **Big dial**: drag the knob or tap the ring, or use − / + (hold to repeat),
-  in the entity's own steps of 0.5 °C. Sent to Home Assistant when you let
-  go, so the dial never fights you.
+- **Big dial** shows the target; set it with − / + (hold to repeat) in
+  steps of 0.5 °C. The dial itself ignores touch, so it can't be changed
+  by accident and a swipe can start anywhere. Sent to Home Assistant a
+  moment after the last tap, so the dial never fights you.
 - **Colour tells the state**: orange while the radiator heats, blue when on
   and idle, grey when off. Status line: *Heating*, *Idle*, *Target reached*,
   *Window open*.
@@ -60,7 +61,8 @@ controls your Music Assistant speakers too.
   players the page controls; **+** next to another speaker joins it, so
   they play the same in sync (✓ takes it out again). The header shows
   *+1* per joined speaker.
-- **Runs on a battery**: dims after 15 s, deep-sleeps after *Sleep after*
+- **Runs on a battery**: dims after 15 s (a touch on the dimmed screen
+  only brightens it, it doesn't press anything), deep-sleeps after *Sleep after*
   (1 min by default) with the backlight held off. A touch or the BOOT button wakes it, and it shows the
   last known values at once (kept in RTC memory) while it reconnects. A
   *Stay awake* switch in Home Assistant keeps it on for updates or on USB.
