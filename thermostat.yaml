@@ -16,6 +16,7 @@ packages:
   settings: !include src/main/settings.yaml
   power: !include src/main/power.yaml
   music: !include src/music/music.yaml
+  library: !include src/music/library.yaml
   music_0: !include { file: src/music/player.yaml, vars: { p: "0", entity: "${music_0_entity}" } }
   music_1: !include { file: src/music/player.yaml, vars: { p: "1", entity: "${music_1_entity}" } }
   music_2: !include { file: src/music/player.yaml, vars: { p: "2", entity: "${music_2_entity}" } }
@@ -31,7 +32,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "boisti13.esp32-s3-thermostat"
-    version: "2.0.0"
+    version: "3.0.0"
   on_boot:
     - priority: -100
       then:

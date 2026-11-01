@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-2.0.0-orange)
+![Version](https://img.shields.io/badge/version-3.0.0-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -48,6 +48,11 @@ controls your Music Assistant speakers too.
   (off/all/one), volume and mute. Made for
   [Music Assistant](https://music-assistant.io) players, works with any
   Home Assistant `media_player`.
+- **Library** (list button on the music page): pick something to play
+  from Music Assistant — audiobooks, playlists, albums, tracks or radio,
+  most recently played first, five per page. Plays on the selected
+  speaker. A paused track (Music Assistant reports it as *idle*) keeps its
+  title and cover.
 - **Several speakers**: tap the speaker name to pick which of up to four
   players the page controls; **+** next to another speaker joins it, so
   they play the same in sync (✓ takes it out again). The header shows
@@ -71,9 +76,13 @@ controls your Music Assistant speakers too.
 |---|---|
 | ![](docs/images/light.png) | ![](docs/images/light-settings.png) |
 
-| Music | Speakers (one joined) | Music, light mode |
+| Music | Speakers (one joined) | Library |
 |---|---|---|
-| ![](docs/images/music.png) | ![](docs/images/speakers.png) | ![](docs/images/music-light.png) |
+| ![](docs/images/music.png) | ![](docs/images/speakers.png) | ![](docs/images/library.png) |
+
+| Music, light mode |
+|---|
+| ![](docs/images/music-light.png) |
 
 ## Hardware
 
@@ -175,6 +184,7 @@ All of it lives in `src/main/entities.yaml`.
 | `main_valve_entity` | `switch.heat_exchanger` | flame in the status bar while on; `switch.none` = never |
 | `central_mode_entity` | `select.central_mode` | warning while *Stopped* |
 | `music_N_entity` (N 0–3) | `media_player.living_room_speaker` | speakers on the music page; `media_player.none` = unused slot |
+| `music_assistant_entry` | `01M5Z4KR19SV8HG7BJG3KAYP3P` | Music Assistant's config entry ID in Home Assistant, for the library |
 | `ha_url` | `http://192.168.178.108:8123` | Home Assistant as the panel reaches it, for covers it serves itself |
 | `idle_dim_s`, `dim_brightness_f` | `15`, `0.15` | dim after 15 s to 15 % |
 | `default_brightness`, `default_sleep`, `default_scheme`, `default_mode` | `70`, `1 min`, `Ember`, `Auto` | first-boot values of the settings |
@@ -196,7 +206,9 @@ From each media player it reads the state and `friendly_name`,
 `volume_level`, `is_volume_muted`, `shuffle`, `repeat` and `group_members`.
 It calls `media_player.media_play_pause`, `media_previous_track`,
 `media_next_track`, `media_seek`, `volume_set`, `volume_mute`,
-`shuffle_set`, `repeat_set`, `join` and `unjoin`. The cover is downloaded
+`shuffle_set`, `repeat_set`, `join` and `unjoin`, and for the library
+`music_assistant.get_library` (its answer comes back to the panel) and
+`music_assistant.play_media`. The cover is downloaded
 only while the music page is open: Music Assistant's image proxy is asked
 for 150 px directly; relative URLs go to `ha_url`. The panel must be
 allowed to perform Home Assistant actions (ESPHome integration options).
@@ -233,6 +245,8 @@ src/room/room.yaml         one room: HA values, refresh, actions (×5)
 src/room/tile.yaml         one room's tile (×5)
 src/music/music.yaml       music page logic: player selection, cover, actions
 src/music/music_page.yaml  the music page and the speaker list
+src/music/library.yaml     library: Music Assistant lists, paging, play
+src/music/library_page.yaml    the library page
 src/music/player.yaml      one speaker: its HA values (×4)
 src/music/music.h          helpers (time, cover URL, player slots)
 demo/screenshot.yaml       the UI on a PC (SDL) with made-up values

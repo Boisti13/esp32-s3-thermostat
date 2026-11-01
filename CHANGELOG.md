@@ -1,5 +1,22 @@
 # Changelog
 
+## v3.0.0 — 2026-11-01
+
+Needs the new `music_assistant_entry` setting in `src/main/entities.yaml`.
+
+### Added
+
+- **Library** (list button on the music page): pick an audiobook,
+  playlist, album, track or radio station from Music Assistant, most
+  recently played first, five per page; it plays on the selected speaker.
+
+### Fixed
+
+- Pausing showed *Nothing playing* and dropped the cover: Music
+  Assistant's Sendspin players report a paused track as `idle`. A player
+  that is idle with a title now counts as paused, and a cover that
+  vanishes for a moment while the state changes is kept.
+
 ## v2.0.0 — 2026-11-01
 
 Needs the new `music_N_entity` and `ha_url` settings in

@@ -1,0 +1,137 @@
+# Library: pick something to play. Opened with the list button on the music
+# page; lists Music Assistant's library by category (chips at the top),
+# most recently played first, five titles per page (‹ › to page). Tapping a
+# title plays it on the selected speaker. The lists come from Music
+# Assistant's music_assistant.get_library action, whose answer Home
+# Assistant sends back to the panel (src/music/library_page.yaml has the
+# widgets).
+
+globals:
+  # Category (index into the chips: audiobook, playlist, album, track, radio)
+  # and page shown
+  - id: lib_cat
+    type: int
+    restore_value: true
+    initial_value: "0"
+  - id: lib_page
+    type: int
+    initial_value: "0"
+  # URIs of the titles on the rows; "" = empty row
+  - id: lib_uris
+    type: std::array<std::string, 5>
+  # A next page exists (the request asks for one title more than it shows)
+  - id: lib_more
+    type: bool
+    initial_value: "false"
+  # Media type of the category, for the actions
+  - id: lib_type
+    type: std::string
+    initial_value: '"audiobook"'
+
+script:
+  - id: show_library
+    then:
+      - lvgl.widget.hide: mus_picker
+      - lvgl.page.show:
+          id: page_library
+          animation: NONE
+      - globals.set: { id: lib_page, value: "0" }
+      - script.execute: load_library
+
+  - id: library_category
+    parameters:
+      cat: int
+    then:
+      - globals.set: { id: lib_cat, value: !lambda "return cat;" }
+      - globals.set: { id: lib_page, value: "0" }
+      - script.execute: load_library
+
+  - id: library_turn
+    parameters:
+      steps: int
+    then:
+      - lambda: |-
+          const int p = id(lib_page) + steps;
+          if (p < 0 || (steps > 0 && !id(lib_more))) return;
+          id(lib_page) = p;
+          id(load_library).execute();
+
+  # Ask Music Assistant for one page of the current category
+  - id: load_library
+    mode: restart
+    then:
+      - lambda: |-
+          static const char *const TYPES[5] = {"audiobook", "playlist", "album", "track", "radio"};
+          if (id(lib_cat) < 0 || id(lib_cat) > 4) id(lib_cat) = 0;
+          id(lib_type) = TYPES[id(lib_cat)];
+          lv_obj_t *chips[5] = {id(lib_cat_0), id(lib_cat_1), id(lib_cat_2), id(lib_cat_3), id(lib_cat_4)};
+          for (int k = 0; k < 5; k++) {
+            if (k == id(lib_cat)) lv_obj_add_state(chips[k], LV_STATE_CHECKED);
+            else lv_obj_remove_state(chips[k], LV_STATE_CHECKED);
+          }
+          lv_obj_t *rows[5] = {id(lib_row_0), id(lib_row_1), id(lib_row_2), id(lib_row_3), id(lib_row_4)};
+          for (int k = 0; k < 5; k++) {
+            id(lib_uris)[k] = "";
+            lv_obj_add_flag(rows[k], LV_OBJ_FLAG_HIDDEN);
+          }
+          lv_label_set_text(id(lib_status_lbl), id(ha_connected) ? "Loading…" : "Home Assistant not connected");
+          lv_obj_remove_flag(id(lib_status_lbl), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_state(id(lib_prev), LV_STATE_DISABLED);
+          lv_obj_add_state(id(lib_next), LV_STATE_DISABLED);
+      - homeassistant.action:
+          action: music_assistant.get_library
+          data:
+            config_entry_id: ${music_assistant_entry}
+            media_type: !lambda "return id(lib_type);"
+            order_by: last_played_desc
+            limit: "6"
+            offset: !lambda 'return str_sprintf("%d", id(lib_page) * 5);'
+          capture_response: true
+          on_success:
+            - lambda: |-
+                lv_obj_t *rows[5] = {id(lib_row_0), id(lib_row_1), id(lib_row_2), id(lib_row_3), id(lib_row_4)};
+                lv_obj_t *names[5] = {id(lib_name_0), id(lib_name_1), id(lib_name_2), id(lib_name_3), id(lib_name_4)};
+                int n = 0;
+                id(lib_more) = false;
+                for (JsonObjectConst it : response["items"].as<JsonArrayConst>()) {
+                  if (n == 5) { id(lib_more) = true; break; }
+                  const char *name = it["name"] | "";
+                  const char *uri = it["uri"] | "";
+                  std::string text = name;
+                  // Albums and tracks: "Title · Artist"
+                  JsonArrayConst artists = it["artists"].as<JsonArrayConst>();
+                  if (!artists.isNull() && artists.size() > 0) {
+                    const char *a = artists[0]["name"] | "";
+                    if (*a) text += std::string(" · ") + a;
+                  }
+                  lv_label_set_text(names[n], text.c_str());
+                  id(lib_uris)[n] = uri;
+                  lv_obj_remove_flag(rows[n], LV_OBJ_FLAG_HIDDEN);
+                  n++;
+                }
+                if (n == 0) lv_label_set_text(id(lib_status_lbl), id(lib_page) ? "No more titles" : "Nothing here yet");
+                else lv_obj_add_flag(id(lib_status_lbl), LV_OBJ_FLAG_HIDDEN);
+                if (id(lib_page) > 0) lv_obj_remove_state(id(lib_prev), LV_STATE_DISABLED);
+                if (id(lib_more)) lv_obj_remove_state(id(lib_next), LV_STATE_DISABLED);
+          on_error:
+            - lambda: |-
+                ESP_LOGW("library", "get_library failed: %s", error.c_str());
+                lv_label_set_text(id(lib_status_lbl), "Music Assistant didn't answer");
+                if (id(lib_page) > 0) lv_obj_remove_state(id(lib_prev), LV_STATE_DISABLED);
+
+  # Play row k on the selected speaker, back to the music page
+  - id: library_play
+    parameters:
+      k: int
+    then:
+      - if:
+          condition:
+            lambda: "return k >= 0 && k < 5 && !id(lib_uris)[k].empty();"
+          then:
+            - homeassistant.action:
+                action: music_assistant.play_media
+                data:
+                  entity_id: !lambda "return id(music_entity);"
+                  media_id: !lambda "return id(lib_uris)[k];"
+                  media_type: !lambda "return id(lib_type);"
+            - script.execute: show_music

@@ -193,7 +193,8 @@ script:
   - id: apply_scheme
     then:
       - lambda: |-
-          lv_obj_t *roots[] = {lv_layer_top(), id(page_main)->obj, id(page_settings)->obj, id(page_music)->obj};
+          lv_obj_t *roots[] = {lv_layer_top(), id(page_main)->obj, id(page_settings)->obj, id(page_music)->obj,
+                               id(page_library)->obj};
           if (!id(look_ready)) {
             for (lv_obj_t *r : roots) panel_localize(r);
             id(look_ready) = true;
@@ -229,6 +230,7 @@ script:
             id(mus_shuffle), id(mus_repeat),
             id(mus_pick_0), id(mus_pick_1), id(mus_pick_2), id(mus_pick_3),
             id(mus_join_0), id(mus_join_1), id(mus_join_2), id(mus_join_3),
+            id(lib_cat_0), id(lib_cat_1), id(lib_cat_2), id(lib_cat_3), id(lib_cat_4),
           };
           for (lv_obj_t *b : btns) {
             lv_obj_set_style_bg_color(b, heat, LV_PART_MAIN | LV_STATE_CHECKED);

@@ -36,7 +36,7 @@ inline void music_fmt_time(char *buf, size_t n, int s) {
 // Home Assistant's address, and Music Assistant's image proxy is asked for
 // the size the page shows instead of 512 px.
 inline std::string music_cover_url(const std::string &pic, const char *ha_url, int size) {
-  if (pic.empty() || pic == "unknown" || pic == "unavailable")
+  if (pic.empty() || pic == "None" || pic == "unknown" || pic == "unavailable")
     return "";
   std::string url = pic[0] == '/' ? std::string(ha_url) + pic : pic;
   if (url.find("/imageproxy") != std::string::npos) {
@@ -60,9 +60,14 @@ struct MusicPlayer {
 
   bool used() const { return strcmp(entity, "media_player.none") != 0; }
   bool playing() const { return used() && state->state == "playing"; }
-  // Paused or buffering counts too: there is a track to show
+  // A track to show: also paused, and idle with a title (Music Assistant's
+  // Sendspin players report a paused track as idle and keep its details)
   bool active() const {
-    return used() && (state->state == "playing" || state->state == "paused" || state->state == "buffering");
+    if (!used()) return false;
+    const std::string &s = state->state;
+    if (s == "playing" || s == "paused" || s == "buffering") return true;
+    const std::string &t = title->state;
+    return s == "idle" && title->has_state() && !t.empty() && t != "None" && t != "unknown";
   }
 };
 

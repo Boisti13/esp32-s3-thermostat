@@ -59,6 +59,8 @@ substitutions:
   ic_speaker: "\U000F04C3"
   ic_menu_down: "\U000F035D"
   ic_check: "\U000F012C"
+  ic_library: "\U000F0CB8"   # playlist-music
+  ic_forward: "\U000F0142"   # chevron-right
 
   text_glyphs: " !#%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz|°·–"
 
@@ -106,7 +108,7 @@ font:
         glyphs: ["${ic_fire}", "${ic_thermometer}", "${ic_water}", "${ic_valve}",
                  "${ic_cloud}", "${ic_stop}", "${ic_offline}", "${ic_power}", "${ic_window}",
                  "${ic_battery}", "${ic_battery_50}", "${ic_battery_20}", "${ic_battery_alert}",
-                 "${ic_speaker}", "${ic_menu_down}"]
+                 "${ic_speaker}", "${ic_menu_down}", "${ic_back}", "${ic_forward}"]
   # Big values on the stat tiles
   - file: { type: gfonts, family: Inter, weight: 600 }
     id: font_value
@@ -132,7 +134,8 @@ font:
              "${ic_sun}", "${ic_moon}", "${ic_auto}",
              "${ic_music}", "${ic_skip_previous}", "${ic_skip_next}", "${ic_shuffle}",
              "${ic_repeat}", "${ic_repeat_once}", "${ic_volume_high}", "${ic_volume_medium}",
-             "${ic_volume_low}", "${ic_volume_off}", "${ic_speaker}", "${ic_check}"]
+             "${ic_volume_low}", "${ic_volume_off}", "${ic_speaker}", "${ic_check}",
+             "${ic_library}"]
   # Play/pause and the empty cover on the music page
   - file: ${project_dir}/src/assets/fonts/materialdesignicons-webfont.ttf
     id: font_icon_big

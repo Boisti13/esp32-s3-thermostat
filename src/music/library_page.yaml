@@ -1,0 +1,171 @@
+# The library page (list button on the music page; ‹ goes back there),
+# filled in by src/music/library.yaml.
+#
+#  ┌──────────────────────────────────────────────┐
+#  │ ‹ Library                      ☁ 9.5°  17:07 │
+#  │ [Books][Lists][Albums][Tracks][Radio]  [‹][›]│
+#  │ ┌──────────────────────────────────────────┐ │
+#  │ │ ▶ Der finstere Rivale                    │ │
+#  │ ├──────────────────────────────────────────┤ │
+#  │ │ ▶ Das leere Grab                         │ │  × 5
+#  └──────────────────────────────────────────────┘
+
+id: page_library
+bg_color: col_bg
+scrollable: false
+widgets:
+  - button:
+      x: 4
+      y: 2
+      width: 40
+      height: 34
+      border_width: 0
+      widgets:
+        - label: { align: CENTER, text: "${ic_back}", text_font: font_icon, text_color: col_text }
+      on_click:
+        - script.execute: show_music
+  - label:
+      x: 46
+      y: 6
+      text: "Library"
+      text_font: font_title
+      text_color: col_text
+
+  # Categories; the current one is filled
+  - button: &cat_chip
+      id: lib_cat_0
+      x: 14
+      y: 42
+      width: 72
+      height: 30
+      radius: 15
+      pad_all: 0
+      widgets:
+        - label: { align: CENTER, text: "Books", text_font: font_small }
+      on_click:
+        - script.execute: { id: library_category, cat: 0 }
+  - button:
+      <<: *cat_chip
+      id: lib_cat_1
+      x: 90
+      widgets:
+        - label: { align: CENTER, text: "Playlists", text_font: font_small }
+      on_click:
+        - script.execute: { id: library_category, cat: 1 }
+  - button:
+      <<: *cat_chip
+      id: lib_cat_2
+      x: 166
+      widgets:
+        - label: { align: CENTER, text: "Albums", text_font: font_small }
+      on_click:
+        - script.execute: { id: library_category, cat: 2 }
+  - button:
+      <<: *cat_chip
+      id: lib_cat_3
+      x: 242
+      widgets:
+        - label: { align: CENTER, text: "Tracks", text_font: font_small }
+      on_click:
+        - script.execute: { id: library_category, cat: 3 }
+  - button:
+      <<: *cat_chip
+      id: lib_cat_4
+      x: 318
+      widgets:
+        - label: { align: CENTER, text: "Radio", text_font: font_small }
+      on_click:
+        - script.execute: { id: library_category, cat: 4 }
+
+  # Previous / next page
+  - button:
+      id: lib_prev
+      x: 400
+      y: 42
+      width: 32
+      height: 30
+      radius: 15
+      pad_all: 0
+      disabled:
+        border_opa: 40%
+        text_opa: 40%
+      widgets:
+        - label: { align: CENTER, text: "${ic_back}", text_font: font_body }
+      on_click:
+        - script.execute: { id: library_turn, steps: -1 }
+  - button:
+      id: lib_next
+      x: 436
+      y: 42
+      width: 32
+      height: 30
+      radius: 15
+      pad_all: 0
+      disabled:
+        border_opa: 40%
+        text_opa: 40%
+      widgets:
+        - label: { align: CENTER, text: "${ic_forward}", text_font: font_body }
+      on_click:
+        - script.execute: { id: library_turn, steps: 1 }
+
+  # Loading / empty / error message
+  - label:
+      id: lib_status_lbl
+      align: TOP_MID
+      y: 140
+      text: ""
+      text_font: font_music_body
+      text_color: col_text2
+
+  # Five titles
+  - button: &lib_row
+      id: lib_row_0
+      x: 14
+      y: 80
+      width: 452
+      height: 34
+      radius: 10
+      pad_all: 0
+      hidden: true
+      widgets:
+        - label: { align: LEFT_MID, x: 12, text: "${ic_play}", text_font: font_music_small }
+        - label: { id: lib_name_0, align: LEFT_MID, x: 32, width: 410, long_mode: DOT, text: "", text_font: font_music_body }
+      on_click:
+        - script.execute: { id: library_play, k: 0 }
+  - button:
+      <<: *lib_row
+      id: lib_row_1
+      y: 118
+      widgets:
+        - label: { align: LEFT_MID, x: 12, text: "${ic_play}", text_font: font_music_small }
+        - label: { id: lib_name_1, align: LEFT_MID, x: 32, width: 410, long_mode: DOT, text: "", text_font: font_music_body }
+      on_click:
+        - script.execute: { id: library_play, k: 1 }
+  - button:
+      <<: *lib_row
+      id: lib_row_2
+      y: 156
+      widgets:
+        - label: { align: LEFT_MID, x: 12, text: "${ic_play}", text_font: font_music_small }
+        - label: { id: lib_name_2, align: LEFT_MID, x: 32, width: 410, long_mode: DOT, text: "", text_font: font_music_body }
+      on_click:
+        - script.execute: { id: library_play, k: 2 }
+  - button:
+      <<: *lib_row
+      id: lib_row_3
+      y: 194
+      widgets:
+        - label: { align: LEFT_MID, x: 12, text: "${ic_play}", text_font: font_music_small }
+        - label: { id: lib_name_3, align: LEFT_MID, x: 32, width: 410, long_mode: DOT, text: "", text_font: font_music_body }
+      on_click:
+        - script.execute: { id: library_play, k: 3 }
+  - button:
+      <<: *lib_row
+      id: lib_row_4
+      y: 232
+      widgets:
+        - label: { align: LEFT_MID, x: 12, text: "${ic_play}", text_font: font_music_small }
+        - label: { id: lib_name_4, align: LEFT_MID, x: 32, width: 410, long_mode: DOT, text: "", text_font: font_music_body }
+      on_click:
+        - script.execute: { id: library_play, k: 4 }

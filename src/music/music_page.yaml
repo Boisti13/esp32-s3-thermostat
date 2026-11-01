@@ -10,7 +10,7 @@
 #  │ │          │  ━━━━━━━●────────────────       │
 #  │ │          │  12:04                 1:00:40  │
 #  │ └──────────┘   ⤨    ⏮   (▶)   ⏭    🔁      │
-#  │ 🔉 ━━━━━━━━━━━━━━━━━●────────────────  42%   │
+#  │ 🔉 ━━━━━━━━━━━━━━━●──────────  42%   (☰)     │
 #  └──────────────────────────────────────────────┘
 
 id: page_music
@@ -241,7 +241,7 @@ widgets:
       id: mus_volume_slider
       x: 60
       y: 244
-      width: 350
+      width: 290
       height: 8
       min_value: 0
       max_value: 100
@@ -266,11 +266,25 @@ widgets:
   - label:
       id: mus_volume_lbl
       align: TOP_RIGHT
-      x: -14
+      x: -66
       y: 239
       text: ""
       text_font: font_body
       text_color: col_text2
+
+  # Library: pick something to play (src/music/library_page.yaml)
+  - button:
+      id: mus_library
+      x: 424
+      y: 226
+      width: 44
+      height: 40
+      radius: 20
+      pad_all: 0
+      widgets:
+        - label: { align: CENTER, text: "${ic_library}", text_font: font_icon }
+      on_click:
+        - script.execute: show_library
 
   # Speaker list over the whole page; the selected one is filled, and the
   # button next to each other speaker joins it to the selected one
