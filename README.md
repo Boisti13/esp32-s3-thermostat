@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-3.1.0-orange)
+![Version](https://img.shields.io/badge/version-3.2.0-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -46,10 +46,11 @@ controls your Music Assistant speakers too.
 - **Music page** (♫ bottom left, orange while something plays): cover art,
   title, artist and album (umlauts and accents included), a progress bar
   you can drag to seek, shuffle, previous, play/pause, next, repeat
-  (off/all/one), volume and mute. Made for
+  (off/all/one). Volume is one button that opens a popup with − / +
+  (5 % steps, hold to repeat) and mute. Made for
   [Music Assistant](https://music-assistant.io) players, works with any
   Home Assistant `media_player`.
-- **Library** (list button on the music page): pick something to play
+- **Library** (button on the cover's corner, or tap the cover): pick something to play
   from Music Assistant — audiobooks, playlists, albums, tracks or radio,
   most recently played first, five per page. Plays on the selected
   speaker. A paused track (Music Assistant reports it as *idle*) keeps its
@@ -81,9 +82,9 @@ controls your Music Assistant speakers too.
 |---|---|---|
 | ![](docs/images/music.png) | ![](docs/images/speakers.png) | ![](docs/images/library.png) |
 
-| Music, light mode |
-|---|
-| ![](docs/images/music-light.png) |
+| Music, light mode | Volume popup |
+|---|---|
+| ![](docs/images/music-light.png) | ![](docs/images/volume.png) |
 
 ## Hardware
 

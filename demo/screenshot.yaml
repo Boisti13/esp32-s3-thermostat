@@ -166,13 +166,14 @@ script:
 
 # Show each room in turn, then the settings page, room 0 in the Ocean
 # scheme, room 0 and the settings page in light mode, and the music page
-# in dark and light mode, the speaker list and the library (for the screenshot script)
+# in dark and light mode, the speaker list, the library and the volume popup (for the screenshot
+# script)
 interval:
   - interval: 3s
     then:
       - lambda: |-
           static int n = -1;   // first run (at boot) shows room 0
-          n = (n + 1) % 13;
+          n = (n + 1) % 14;
           auto scheme = [](const char *name) { id(color_scheme).make_call().set_option(name).perform(); };
           auto mode = [](const char *name) { id(appearance).make_call().set_option(name).perform(); };
           int tile = n;
@@ -186,6 +187,7 @@ interval:
             case 10: mode("Dark"); return;
             case 11: id(show_music_picker).execute(); return;
             case 12: id(demo_library).execute(); return;
+            case 13: id(show_music).execute(); id(music_volume_popup).execute(); return;
           }
           lv_obj_t *tiles[5] = {id(tile_r0), id(tile_r1), id(tile_r2), id(tile_r3), id(tile_r4)};
           lv_tileview_set_tile(id(tv_rooms), tiles[tile], LV_ANIM_OFF);

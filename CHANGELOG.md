@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.2.0 — 2026-11-01
+
+### Changed
+
+- Music page less cramped: the volume slider is gone; one volume button
+  opens a popup with − / + (5 % steps, hold to repeat) and mute, closing
+  4 s after the last tap. The library button sits on the cover's corner
+  (tapping the cover opens it too), and the playback controls moved down
+  into the bottom row.
+
+### Fixed
+
+- Library stayed empty ("expected int at 'offset'"): ESPHome sends action
+  data as text; `limit` and `offset` now go through a template so Home
+  Assistant passes numbers.
+
 ## v3.1.0 — 2026-11-01
 
 ### Changed

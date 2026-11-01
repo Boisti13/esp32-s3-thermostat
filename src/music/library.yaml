@@ -84,7 +84,11 @@ script:
             config_entry_id: ${music_assistant_entry}
             media_type: !lambda "return id(lib_type);"
             order_by: last_played_desc
-            limit: "6"
+          # Numbers: ESPHome sends data as text, the template makes them ints
+          data_template:
+            limit: "{{ 6 }}"
+            offset: "{{ offset | int }}"
+          variables:
             offset: !lambda 'return str_sprintf("%d", id(lib_page) * 5);'
           capture_response: true
           on_success:

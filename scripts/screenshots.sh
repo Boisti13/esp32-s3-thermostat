@@ -22,8 +22,8 @@ app=$!
 # The demo moves to the next room every 3 s after boot; shoot mid-way.
 mkdir -p docs/images
 sleep 1.5
-for name in room-0 room-1 room-2 room-3 room-4 settings scheme-ocean light light-settings music-light music speakers library; do
+for name in room-0 room-1 room-2 room-3 room-4 settings scheme-ocean light light-settings music-light music speakers library volume; do
   DISPLAY=:97 import -window root "docs/images/$name.png"
   sleep 3
 done
-echo "saved docs/images/room-{0..4}.png, settings.png, scheme-ocean.png, light.png, light-settings.png, music.png, music-light.png, speakers.png, library.png"
+echo "saved docs/images/room-{0..4}.png, settings.png, scheme-ocean.png, light.png, light-settings.png, music.png, music-light.png, speakers.png, library.png, volume.png"

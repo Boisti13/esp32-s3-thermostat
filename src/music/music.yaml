@@ -203,22 +203,21 @@ script:
           else lv_obj_remove_state(id(mus_repeat), LV_STATE_CHECKED);
           lv_label_set_text(id(mus_repeat_lbl), rep == "one" ? "${ic_repeat_once}" : "${ic_repeat}");
 
-          // Volume (the slider's own value while it is being dragged)
+          // Volume (what − / + set until Home Assistant reports it back)
           const float vol = m.volume->state;
           if (id(music_volume_pending) >= 0 && !isnan(vol) && lroundf(vol * 100) == id(music_volume_pending))
             id(music_volume_pending) = -1;
           int v = id(music_volume_pending) >= 0 ? id(music_volume_pending) : isnan(vol) ? 0 : (int) lroundf(vol * 100);
-          if (!lv_obj_has_state(id(mus_volume_slider), LV_STATE_PRESSED))
-            lv_slider_set_value(id(mus_volume_slider), v, LV_ANIM_OFF);
-          char buf[16];
-          snprintf(buf, sizeof(buf), "%d%%", v);
-          lv_label_set_text(id(mus_volume_lbl), buf);
           const bool muted = m.muted->has_state() && m.muted->state;
+          const char *icon = muted || v == 0 ? "${ic_volume_off}" : v < 34 ? "${ic_volume_low}"
+                             : v < 67 ? "${ic_volume_medium}" : "${ic_volume_high}";
+          char buf[24];
+          snprintf(buf, sizeof(buf), "%s %d%%", icon, v);
+          lv_label_set_text(id(mus_volume_lbl), buf);
+          lv_label_set_text(id(mus_vol_pop_lbl), buf);
           id(music_shuffle_on) = m.shuffle->has_state() && m.shuffle->state;
           id(music_muted_on) = muted;
           id(music_repeat_next) = rep == "all" ? "one" : rep == "one" ? "off" : "all";   // off -> all -> one
-          lv_label_set_text(id(mus_mute_lbl), muted || v == 0 ? "${ic_volume_off}" : v < 34 ? "${ic_volume_low}"
-                                                             : v < 67 ? "${ic_volume_medium}" : "${ic_volume_high}");
       - script.execute: refresh_music_position
       - script.execute: refresh_music_list
 
@@ -275,7 +274,7 @@ script:
 
   - id: show_music
     then:
-      - lvgl.widget.hide: [btn_menu, btn_music, dots_row, mus_picker]
+      - lvgl.widget.hide: [btn_menu, btn_music, dots_row, mus_picker, mus_vol_pop]
       - lvgl.page.show:
           id: page_music
           animation: NONE
@@ -331,9 +330,41 @@ script:
           data:
             entity_id: !lambda "return id(music_entity);"
 
-  - id: music_set_volume
+  # Volume popup: opened by the volume button, closes 4 s after the last tap
+  - id: music_volume_popup
     then:
-      - lambda: "id(music_volume_pending) = lv_slider_get_value(id(mus_volume_slider));"
+      - if:
+          condition:
+            lambda: "return lv_obj_has_flag(id(mus_vol_pop), LV_OBJ_FLAG_HIDDEN);"
+          then:
+            - lvgl.widget.show: mus_vol_pop
+            - script.execute: music_volume_popup_timer
+          else:
+            - lvgl.widget.hide: mus_vol_pop
+  - id: music_volume_popup_timer
+    mode: restart
+    then:
+      - delay: 4s
+      - lvgl.widget.hide: mus_vol_pop
+
+  # − / + : 5 % per tap (hold to repeat); sent once the taps stop
+  - id: music_step_volume
+    parameters:
+      steps: int
+    then:
+      - lambda: |-
+          const float vol = music_players[id(music_sel)].volume->state;
+          int v = id(music_volume_pending) >= 0 ? id(music_volume_pending) : isnan(vol) ? 0 : (int) lroundf(vol * 100);
+          v = std::max(0, std::min(100, (v + steps * 5) / 5 * 5));
+          id(music_volume_pending) = v;
+      - script.execute: music_volume_popup_timer
+      - script.execute: refresh_music
+      - script.execute: music_set_volume
+
+  - id: music_set_volume
+    mode: restart
+    then:
+      - delay: 600ms
       - homeassistant.action:
           action: media_player.volume_set
           data:

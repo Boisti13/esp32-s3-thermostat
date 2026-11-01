@@ -238,7 +238,6 @@ script:
           }
           lv_obj_set_style_text_color(id(lbl_main_valve), heat, 0);
           lv_obj_set_style_bg_color(id(set_brightness_slider), heat, LV_PART_INDICATOR);
-          lv_obj_set_style_bg_color(id(mus_volume_slider), heat, LV_PART_INDICATOR);
           lv_obj_set_style_bg_color(id(mus_play), heat, LV_PART_MAIN);
           lv_obj_set_style_bg_color(id(set_touch_wake), heat, LV_PART_INDICATOR | LV_STATE_CHECKED);
           // Swatches show their own scheme; the current one gets a ring
