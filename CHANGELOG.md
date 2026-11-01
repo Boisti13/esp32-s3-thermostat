@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.2.1 — 2026-11-01
+
+### Changed
+
+- The volume button is a small round icon button (the icon shows the
+  level) instead of a wide bar; the level is in the popup.
+
 ## v3.2.0 — 2026-11-01
 
 ### Changed

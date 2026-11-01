@@ -9,7 +9,7 @@
 #  │ │  cover   │  Album                          │
 #  │ │          │  ━━━━━━━●────────────────       │
 #  │ └───────(☰)   12:04                 1:00:40  │
-#  │ ( 🔉 42% )      ⤨    ⏮   (▶)   ⏭    🔁      │
+#  │ (🔉)            ⤨    ⏮   (▶)   ⏭    🔁      │
 #  └──────────────────────────────────────────────┘
 
 id: page_music
@@ -178,12 +178,12 @@ widgets:
       id: mus_volume
       x: 14
       y: 216
-      width: 150
+      width: 40
       height: 40
       radius: 20
       pad_all: 0
       widgets:
-        - label: { id: mus_volume_lbl, align: CENTER, text: "", text_font: font_body }
+        - label: { id: mus_volume_lbl, align: CENTER, text: "${ic_volume_medium}", text_font: font_icon }
       on_click:
         - script.execute: music_volume_popup
 

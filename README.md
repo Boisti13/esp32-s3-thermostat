@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-3.2.0-orange)
+![Version](https://img.shields.io/badge/version-3.2.1-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -46,7 +46,8 @@ controls your Music Assistant speakers too.
 - **Music page** (♫ bottom left, orange while something plays): cover art,
   title, artist and album (umlauts and accents included), a progress bar
   you can drag to seek, shuffle, previous, play/pause, next, repeat
-  (off/all/one). Volume is one button that opens a popup with − / +
+  (off/all/one). Volume is a small round button (its icon shows the
+  level) that opens a popup with − / +
   (5 % steps, hold to repeat) and mute. Made for
   [Music Assistant](https://music-assistant.io) players, works with any
   Home Assistant `media_player`.

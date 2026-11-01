@@ -213,7 +213,7 @@ script:
                              : v < 67 ? "${ic_volume_medium}" : "${ic_volume_high}";
           char buf[24];
           snprintf(buf, sizeof(buf), "%s %d%%", icon, v);
-          lv_label_set_text(id(mus_volume_lbl), buf);
+          lv_label_set_text(id(mus_volume_lbl), icon);   // the button: icon only
           lv_label_set_text(id(mus_vol_pop_lbl), buf);
           id(music_shuffle_on) = m.shuffle->has_state() && m.shuffle->state;
           id(music_muted_on) = muted;
