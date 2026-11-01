@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.0.1 — 2026-11-01
+
+### Fixed
+
+- No cover: Music Assistant's image proxy only serves 0, 80, 160, 256,
+  512 and 1024 px and answered 150 px with an error. The panel asks for
+  160 px and scales it to 150.
+
 ## v3.0.0 — 2026-11-01
 
 Needs the new `music_assistant_entry` setting in `src/main/entities.yaml`.

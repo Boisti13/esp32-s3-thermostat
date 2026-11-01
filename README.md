@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/Boisti13/esp32-s3-thermostat?include_prereleases)](https://github.com/Boisti13/esp32-s3-thermostat/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-3.0.0-orange)
+![Version](https://img.shields.io/badge/version-3.0.1-orange)
 ![ESPHome](https://img.shields.io/badge/ESPHome-2026.9.1-black)
 ![LVGL](https://img.shields.io/badge/LVGL-9-green)
 
@@ -210,7 +210,7 @@ It calls `media_player.media_play_pause`, `media_previous_track`,
 `music_assistant.get_library` (its answer comes back to the panel) and
 `music_assistant.play_media`. The cover is downloaded
 only while the music page is open: Music Assistant's image proxy is asked
-for 150 px directly; relative URLs go to `ha_url`. The panel must be
+for 160 px (its nearest size) and scaled to 150; relative URLs go to `ha_url`. The panel must be
 allowed to perform Home Assistant actions (ESPHome integration options).
 
 ## Example: a cold morning

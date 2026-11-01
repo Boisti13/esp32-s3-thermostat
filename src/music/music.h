@@ -34,7 +34,8 @@ inline void music_fmt_time(char *buf, size_t n, int s) {
 
 // Cover URL for the panel: relative paths (HA's media player proxy) get
 // Home Assistant's address, and Music Assistant's image proxy is asked for
-// the size the page shows instead of 512 px.
+// a size close to what the page shows instead of 512 px (it only serves
+// 0, 80, 160, 256, 512 and 1024; anything else is a 400).
 inline std::string music_cover_url(const std::string &pic, const char *ha_url, int size) {
   if (pic.empty() || pic == "None" || pic == "unknown" || pic == "unavailable")
     return "";

@@ -258,7 +258,7 @@ script:
     then:
       - lambda: |-
           if (id(music_cover_fixed) || lv_screen_active() != id(page_music)->obj) return;
-          const std::string url = music_cover_url(music_players[id(music_sel)].picture->state, "${ha_url}", 150);
+          const std::string url = music_cover_url(music_players[id(music_sel)].picture->state, "${ha_url}", 160);
           if (url == id(music_cover_url_shown)) return;
           // The cover can vanish for a moment when the state changes (pause):
           // keep the last one while there is still a track
